@@ -1,0 +1,9 @@
+{
+    "requires": ["bare-metal", "events", "stdio-buffered-serial"],
+    "target_overrides": {
+        "*": {
+            "target.c_lib": "std",
+            "target.printf_lib": "std"
+        }
+    }
+}
