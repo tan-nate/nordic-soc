@@ -35,11 +35,11 @@ cell_asic IC[TOTAL_IC];
 
 /* ADC Command Configurations */
 RD      REDUNDANT_MEASUREMENT           = RD_OFF;
-CH      AUX_CH_TO_CONVERT               = AUX_ALL;
+CH      AUX_CH_TO_CONVERT               = GPIO1;
 CONT    CONTINUOUS_MEASUREMENT          = SINGLE;
 OW_C_S  CELL_OPEN_WIRE_DETECTION        = OW_OFF_ALL_CH;
 OW_AUX  AUX_OPEN_WIRE_DETECTION         = AUX_OW_OFF;
-PUP     OPEN_WIRE_CURRENT_SOURCE        = PUP_DOWN;
+PUP     OPEN_WIRE_CURRENT_SOURCE        = PUP_UP;
 DCP     DISCHARGE_PERMITTED             = DCP_OFF;
 RSTF    RESET_FILTER                    = RSTF_OFF;
 ERR     INJECT_ERR_SPI_READ             = WITHOUT_ERR;
@@ -224,7 +224,7 @@ void adBms6830_init_config(uint8_t tIC, cell_asic *ic)
     ic[cic].tx_cfga.refon = PWR_UP;
 //    ic[cic].cfga.cth = CVT_8_1mV;
 //    ic[cic].cfga.flag_d = ConfigA_Flag(FLAG_D0, FLAG_SET) | ConfigA_Flag(FLAG_D1, FLAG_SET);
-    ic[cic].tx_cfga.gpo = ConfigA_Gpo(GPO2, GPO_SET) | ConfigA_Gpo(GPO10, GPO_SET);
+//    ic[cic].tx_cfga.gpo = ConfigA_Gpo(GPO2, GPO_SET) | ConfigA_Gpo(GPO10, GPO_SET); // set GPO2 as 3V output
     ic[cic].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off */
 //    ic[cic].cfga.soakon = SOAKON_CLR;
 //    ic[cic].cfga.fc = IIR_FPA256;
@@ -417,12 +417,12 @@ void adBms6830_read_fcell_voltages(uint8_t tIC, cell_asic *ic)
 */
 void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
 {
-  for(uint8_t cic = 0; cic < tIC; cic++)
-  {
-    /* Init config A */
-    ic[cic].tx_cfga.refon = PWR_UP;
-    ic[cic].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off 0X3FF*/
-  }
+  // for(uint8_t cic = 0; cic < tIC; cic++)
+  // {
+  //   /* Init config A */
+  //   ic[cic].tx_cfga.refon = PWR_UP;
+  //   ic[cic].tx_cfga.gpo = 0X3FF; /* All GPIO pull down off 0X3FF*/
+  // }
   adBmsWakeupIc(tIC);
   adBmsWriteData(tIC, &ic[0], WRCFGA, Config, A);
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);

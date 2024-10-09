@@ -208,6 +208,26 @@ void printReadConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
  *
  *******************************************************************************
 */
+float convertVoltageToTemp(float voltage) {
+  float R_10k = 10020; // measure with multimeter
+  float Vsupply = 4.96;
+  float T0 = 298.15; //25°C in Kelvin
+  float B_param = 3977;
+  float voltageNTC = voltage;
+
+  float Rref = 11129.55751;
+  float A = 3.354016E-3;
+  float B = 2.569850E-4;
+  float C = 2.620131E-6;
+  float D = 6.38309E-8;
+
+  float R_NTC = (R_10k*voltageNTC/Vsupply)/(1 - voltageNTC/Vsupply); //calculating the resistance of the thermistor
+  float Temp_K = (T0*B_param)/(T0*log(R_NTC/R_10k)+B_param); //Temperature in Kelvin
+  // float Temp_K = 1 / (A + B*log(R_NTC/Rref) + C*pow(log(R_NTC/Rref),2) + D*pow(log(R_NTC/Rref),3));
+  float Temp_C = Temp_K - 273.15; //converting into Celsius
+  return Temp_C;
+}
+
 void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
 {
   float voltage;
@@ -270,10 +290,12 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       }
       else if(type == Aux)
       {
-        temperature = (voltage*1000)/10; // Voltage to Temperature Conversion
-        if(index <= 9)
+        // temperature = (voltage*1000)/10; // Voltage to Temperature Conversion for LM35
+        temperature = convertVoltageToTemp(voltage);
+        if(index <= 9) 
         {
 
+          printf("V_aux%d=%f V,",(index+1), voltage);
           printf("T_aux%d=%f Celsius,",(index+1), temperature);
         }
         else if(index == 10)
@@ -287,7 +309,7 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
          // printf("PECError:%d",IC[ic].cccrc.aux_pec);
         }
       }
-      else if(type == RAux) // uSE THIS FOR GPIO
+      else if(type == RAux) 
       {
         printf("RAUX%d=%fV,",(index+1), voltage);
         if(index == (channel-1))
