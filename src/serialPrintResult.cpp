@@ -209,8 +209,8 @@ void printReadConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
  *******************************************************************************
 */
 float convertVoltageToTemp(float voltage) {
-  float R_10k = 10020; // measure with multimeter
-  float Vsupply = 4.96;
+  float R_10k = 10000; // measure with multimeter
+  float Vsupply = 2.990;
   float T0 = 298.15; //25°C in Kelvin
   float B_param = 3977;
   float voltageNTC = voltage;
