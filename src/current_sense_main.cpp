@@ -1,4 +1,5 @@
 #include "mbed.h"
+#include <algorithm> // For sorting the array in the median filter
 
 // NRF52-DK uses specific pins. Replace with the correct pins for your MCU.
 AnalogIn sensorPinA0(A0); // Define the analog pin (Replace with actual pin names if needed)
@@ -8,14 +9,15 @@ BufferedSerial pc(USBTX, USBRX, 9600); // Use BufferedSerial for serial communic
 
 const float SHUNT_CURRENT_A = 10.00;
 const float SHUNT_VOLTAGE_MV = 100.0;
-const float CORRECTION_FACTOR = 0.00;
-const float HALL_SENSITIVITY = 80.0;
-const float OP_AMP_GAIN = 4.9819;
+const float HALL_SENSITIVITY = 80.0;   // Sensitivity of the Hall sensor in mV/A
+const float OP_AMP_GAIN = 4.9819;      // Gain applied by the operational amplifier
 
-const int ITERATION = 20;
-const float VOLTAGE_REFERENCE_MV = 3000.00; // 3V reference
-const int BIT_RESOLUTION = 10;
-const int MAX_SENSOR_VALUE = 100; // Define the maximum sensor value
+const int ITERATION = 50;  // Increased number of samples for better filtering
+const float VOLTAGE_REFERENCE_V = 3.00; // 3V reference CHECK THIS
+const int BIT_RESOLUTION = 16;  // 16-bit ADC resolution CHECK THIS
+
+// Low-Pass Filter Constant
+const float ALPHA = 0.1;  // Alpha value for exponential smoothing
 
 // SOC Global Variables
 const float BATTERY_CAP_AH = 5.0;
@@ -30,7 +32,8 @@ Timer currentSenseTimer;
 // Function prototypes
 void printCurrent();
 float HallEffectSensor();
-float CalcTruncatedMean(int* arr_sv, size_t len_arr_sv);
+float CalcMedian(int* arr_sv, size_t len_arr_sv);
+float ApplyLowPassFilter(float current);
 
 // Main function for current sensing
 void current_sense_main() {
@@ -48,6 +51,7 @@ void current_sense_main() {
         prevMillis = currentMillis;
 
         float current_a = HallEffectSensor();
+        current_a = ApplyLowPassFilter(current_a); // Apply low-pass filter to smooth out the noise
 
         // Calculate the charge (A*s)
         float charge = current_a * (interval / 1000.0);
@@ -71,37 +75,37 @@ void current_sense_main() {
     }
 }
 
-// Function to calculate the truncated mean (removes highest and lowest values)
-float CalcTruncatedMean(int* arr_sv, size_t len_arr_sv) {
-    float final_avg = 0;
-    int min_so_far = 16384;
-    int max_so_far = 0;
-
-    for (size_t idx = 0; idx < len_arr_sv; idx++) {
-        int current_value = arr_sv[idx];
-        if (current_value < min_so_far) {
-            min_so_far = current_value;
-        }
-        if (current_value > max_so_far) {
-            max_so_far = current_value;
-        }
-        final_avg += current_value;
+// Function to calculate the median value (robust to outliers)
+float CalcMedian(int* arr_sv, size_t len_arr_sv) {
+    // Sort the array
+    std::sort(arr_sv, arr_sv + len_arr_sv);
+    
+    // If the length is odd, return the middle element
+    if (len_arr_sv % 2 != 0) {
+        return arr_sv[len_arr_sv / 2];
     }
-
-    final_avg -= min_so_far;
-    final_avg -= max_so_far;
-    final_avg = final_avg / (len_arr_sv - 2); // Remove the highest and lowest values
-    return final_avg;
+    // If the length is even, return the average of the two middle elements
+    return (arr_sv[(len_arr_sv - 1) / 2] + arr_sv[len_arr_sv / 2]) / 2.0;
 }
 
-// Function to read and process the Hall Effect sensor data with noise control
+// Low-pass filter (Exponential Smoothing)
+float ApplyLowPassFilter(float current) {
+    static float filteredCurrent = 0; // Keeps track of the filtered value
+    
+    // Apply exponential smoothing
+    filteredCurrent = (ALPHA * current) + ((1.0 - ALPHA) * filteredCurrent);
+    
+    return filteredCurrent;
+}
+
+// Function to read and process the Hall Effect sensor data with median and low-pass filters
 float HallEffectSensor() {
     float vref = 0;
     float vout = 0;
     int RefSensorValues[ITERATION];
     int OutSensorValues[ITERATION];
-    float ref_voltage_mV;
-    float out_voltage_mV;
+    float ref_voltage_V;
+    float out_voltage_V;
     float voltage_diff;
     float current;
 
@@ -112,17 +116,17 @@ float HallEffectSensor() {
         ThisThread::sleep_for(1ms);
     }
 
-    // Apply noise reduction with truncated mean
-    vref = CalcTruncatedMean(RefSensorValues, ITERATION);
-    vout = CalcTruncatedMean(OutSensorValues, ITERATION);
+    // Apply median filter for better noise reduction
+    vref = CalcMedian(RefSensorValues, ITERATION);
+    vout = CalcMedian(OutSensorValues, ITERATION);
 
-    // Convert readings to voltage (mV)
-    ref_voltage_mV = (vref) * (VOLTAGE_REFERENCE_MV / (pow(2, BIT_RESOLUTION) - 1));
-    out_voltage_mV = (vout) * (VOLTAGE_REFERENCE_MV / (pow(2, BIT_RESOLUTION) - 1));
+    // Convert readings to voltage (V) (since AnalogIn provides a 16-bit value)
+    ref_voltage_V = (vref / pow(2, BIT_RESOLUTION)) * VOLTAGE_REFERENCE_V;
+    out_voltage_V = (vout / pow(2, BIT_RESOLUTION)) * VOLTAGE_REFERENCE_V;
 
     // Calculate the voltage difference and current
-    voltage_diff = out_voltage_mV - ref_voltage_mV;
-    current = voltage_diff / HALL_SENSITIVITY;
+    voltage_diff = (out_voltage_V - ref_voltage_V) / OP_AMP_GAIN;  // Adjust for amplifier gain
+    current = (voltage_diff * 1000) / HALL_SENSITIVITY;  // Convert to mV and apply sensitivity
 
     // Print the current reading
     char current_msg[50];
