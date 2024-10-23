@@ -12,60 +12,66 @@ const float CORRECTION_FACTOR = 0.00;
 const float HALL_SENSITIVITY = 80.0;
 const float OP_AMP_GAIN = 4.9819;
 
-const int ITERATION = 20; 
+const int ITERATION = 20;
 const float VOLTAGE_REFERENCE_MV = 3000.00; // 3V reference
-const int BIT_RESOLUTION = 10 ;
+const int BIT_RESOLUTION = 10;
 const int MAX_SENSOR_VALUE = 100; // Define the maximum sensor value
 
 // SOC Global Variables
 const float BATTERY_CAP_AH = 5.0;
 float SOC = 100.0; // Initial SOC
 unsigned long prevMillis = 0;
-const long interval = 1000; // 1000ms to 1sec
+const long interval = 1000; // 1000ms = 1 sec
 float totalCoulombs = 0.0;
 
+// Timer object to handle periodic calls
+Timer currentSenseTimer;
+
+// Function prototypes
 void printCurrent();
 float HallEffectSensor();
 float CalcTruncatedMean(int* arr_sv, size_t len_arr_sv);
 
-int current_sense_main() {
-    // Startup message
-    pc.write("10A Current Shunt Sensor\n", 26);
-    ThisThread::sleep_for(500ms);
+// Main function for current sensing
+void current_sense_main() {
+    // Start the timer if it hasn't been started yet
+    if (currentSenseTimer.elapsed_time().count() == 0) {
+        currentSenseTimer.start();
+        printf("Hello from current sensor!\n");
+        pc.write("10A Current Shunt Sensor\n", 26);
+    }
 
-    while (true) {
-        unsigned long currentMillis = Kernel::get_ms_count(); // Use Mbed's time tracking
+    unsigned long currentMillis = Kernel::get_ms_count(); // Use Mbed's time tracking
 
-        if (currentMillis - prevMillis >= interval) {
-            prevMillis = currentMillis;
+    // Check if the timer has passed the desired interval
+    if (currentMillis - prevMillis >= interval) {
+        prevMillis = currentMillis;
 
-            float current_a = HallEffectSensor();
+        float current_a = HallEffectSensor();
 
-            // Calculate the charge (A*s)
-            float charge = current_a * (interval / 1000.0);
-            totalCoulombs += charge;
+        // Calculate the charge (A*s)
+        float charge = current_a * (interval / 1000.0);
+        totalCoulombs += charge;
 
-            float socChange = (charge / 3600.0) / BATTERY_CAP_AH * 100;
+        float socChange = (charge / 3600.0) / BATTERY_CAP_AH * 100;
 
-            // Updating the SOC
-            SOC += socChange;
+        // Updating the SOC
+        SOC += socChange;
 
-            if (SOC > 100.0) {
-                SOC = 100.0;
-            } else if (SOC < 0.0) {
-                SOC = 0.0;
-            }
-
-            // Print the SOC
-            char soc_msg[50];
-            sprintf(soc_msg, "State of Charge: %.2f%%\n", SOC);
-            pc.write(soc_msg, strlen(soc_msg));
-
-            ThisThread::sleep_for(1000ms);
+        if (SOC > 100.0) {
+            SOC = 100.0;
+        } else if (SOC < 0.0) {
+            SOC = 0.0;
         }
+
+        // Print the SOC
+        char soc_msg[50];
+        sprintf(soc_msg, "State of Charge: %.2f%%\n", SOC);
+        pc.write(soc_msg, strlen(soc_msg));
     }
 }
 
+// Function to calculate the truncated mean (removes highest and lowest values)
 float CalcTruncatedMean(int* arr_sv, size_t len_arr_sv) {
     float final_avg = 0;
     int min_so_far = 16384;
@@ -84,10 +90,11 @@ float CalcTruncatedMean(int* arr_sv, size_t len_arr_sv) {
 
     final_avg -= min_so_far;
     final_avg -= max_so_far;
-    final_avg = final_avg / (len_arr_sv - 2); // Remove the highest and lowest from the array
+    final_avg = final_avg / (len_arr_sv - 2); // Remove the highest and lowest values
     return final_avg;
 }
 
+// Function to read and process the Hall Effect sensor data with noise control
 float HallEffectSensor() {
     float vref = 0;
     float vout = 0;
@@ -98,21 +105,26 @@ float HallEffectSensor() {
     float voltage_diff;
     float current;
 
+    // Read sensor values for multiple iterations for noise reduction
     for (int i = 0; i < ITERATION; i++) {
         RefSensorValues[i] = sensorPinA1.read_u16(); // Reading reference voltage
         OutSensorValues[i] = sensorPinA2.read_u16(); // Reading output voltage
         ThisThread::sleep_for(1ms);
     }
 
+    // Apply noise reduction with truncated mean
     vref = CalcTruncatedMean(RefSensorValues, ITERATION);
     vout = CalcTruncatedMean(OutSensorValues, ITERATION);
 
+    // Convert readings to voltage (mV)
     ref_voltage_mV = (vref) * (VOLTAGE_REFERENCE_MV / (pow(2, BIT_RESOLUTION) - 1));
     out_voltage_mV = (vout) * (VOLTAGE_REFERENCE_MV / (pow(2, BIT_RESOLUTION) - 1));
 
+    // Calculate the voltage difference and current
     voltage_diff = out_voltage_mV - ref_voltage_mV;
     current = voltage_diff / HALL_SENSITIVITY;
 
+    // Print the current reading
     char current_msg[50];
     sprintf(current_msg, "Current: %.3f A\n", current);
     pc.write(current_msg, strlen(current_msg));

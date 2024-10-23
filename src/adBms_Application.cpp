@@ -23,6 +23,9 @@ and its licensor.
 #include "serialPrintResult.h"
 #include "mcuWrapper.h"
 
+#include "current_sense_main.h"
+
+
 /**
 *******************************************************************************
 * @brief Setup Variables
@@ -65,19 +68,20 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 
 void app_main()
 {
-  printMenu();
+//  printMenu();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
   while(1)
   {
-    int user_command;
-#ifdef MBED
-    scanf("%d", &user_command);
-    printf("Enter cmd:%d\n", user_command);
-#else
-    scanf("%d", &user_command);
-    printf("Enter cmd:%d\n", user_command);
-#endif
-    run_command(user_command);
+//     int user_command;
+// #ifdef MBED
+//     scanf("%d", &user_command);
+//     printf("Enter cmd:%d\n", user_command);
+// #else
+//     scanf("%d", &user_command);
+//     printf("Enter cmd:%d\n", user_command);
+// #endif
+    run_command(3); // HARD CODED: print temperatures
+    current_sense_main();
   }
 }
 
@@ -94,18 +98,21 @@ void run_command(int cmd)
     adBms6830_read_config(TOTAL_IC, &IC[0]);
     break;
 
-  case 3: // Modifying this case to see if i can activate continuous cell readout
+  case 3: // Modified to alternate between cell voltage reading and current sensing
   while (1)
   {
+    // Start and read cell voltages
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-    wait_us(500000);
+    wait_us(500000);  // Half a second delay
 
-
-
+    // Start and read aux (temperature) voltages
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
     adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-    wait_us(1000000);
+
+    // Invoke current sense functionality
+    current_sense_main();
+    wait_us(1000000);  // One second delay
   }
     break;
 

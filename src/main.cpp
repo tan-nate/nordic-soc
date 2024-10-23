@@ -6,7 +6,6 @@ and its licensor.
 
 /* Includes ------------------------------------------------------------------*/
 #include "adbms_main.h"
-#include "current_sense_main.h"
 
 /*
 https://os.mbed.com/platforms/SDP_K1/
@@ -36,7 +35,6 @@ int main()
 
     spi_init();
     adbms_main();
-    // current_sense_main();
 
     return 0;
 }
