@@ -87,8 +87,7 @@ void app_main()
     //     scanf("%d", &user_command);
     //     printf("Enter cmd:%d\n", user_command);
     // #endif
-    run_command(3); // HARD CODED: print temperatures
-    current_sense_main();
+    run_command(3); // HARD CODED: print measurements
   }
 }
 
@@ -105,9 +104,7 @@ void run_command(int cmd)
     adBms6830_read_config(TOTAL_IC, &IC[0]);
     break;
 
-  case 3: // Modified to alternate between cell voltage reading and current sensing
-  while (1)
-  {
+  case 3: 
     // Start and read cell voltages
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
@@ -120,7 +117,6 @@ void run_command(int cmd)
     // Invoke current sense functionality
     current_sense_main();
     wait_us(1000000);  // One second delay
-  }
     break;
 
   case 4:
