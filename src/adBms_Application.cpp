@@ -25,6 +25,9 @@ and its licensor.
 
 #include "current_sense_main.h"
 
+extern "C" {
+  #include "BatterySOCEstimation_rev.h"
+}
 
 /**
 *******************************************************************************
@@ -70,6 +73,10 @@ void app_main()
 {
 //  printMenu();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
+
+  // Initialize the MATLAB-generated estimator.  
+  BatterySOCEstimation_rev_initialize();
+
   while(1)
   {
 //     int user_command;
