@@ -79,14 +79,14 @@ void app_main()
 
   while(1)
   {
-//     int user_command;
-// #ifdef MBED
-//     scanf("%d", &user_command);
-//     printf("Enter cmd:%d\n", user_command);
-// #else
-//     scanf("%d", &user_command);
-//     printf("Enter cmd:%d\n", user_command);
-// #endif
+    // int user_command;
+    // #ifdef MBED
+    //     scanf("%d", &user_command);
+    //     printf("Enter cmd:%d\n", user_command);
+    // #else
+    //     scanf("%d", &user_command);
+    //     printf("Enter cmd:%d\n", user_command);
+    // #endif
     run_command(3); // HARD CODED: print temperatures
     current_sense_main();
   }
