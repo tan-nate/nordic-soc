@@ -105,6 +105,7 @@ void run_command(int cmd)
     break;
 
   case 3: 
+  {
     // Start and read cell voltages
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
@@ -124,6 +125,7 @@ void run_command(int cmd)
 
     wait_us(1000000);  // One second delay
     break;
+  }
 
   case 4:
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
