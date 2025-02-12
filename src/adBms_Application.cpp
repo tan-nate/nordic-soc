@@ -116,6 +116,12 @@ void run_command(int cmd)
 
     // Invoke current sense functionality
     current_sense_main();
+
+    // update and print ekf soc calculation
+    BatterySOCEstimation_rev_step();
+    double ekf_soc = BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor;
+    printf("EKF SOC: %f%%\n", ekf_soc);
+
     wait_us(1000000);  // One second delay
     break;
 
