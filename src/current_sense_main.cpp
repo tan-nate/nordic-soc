@@ -1,6 +1,10 @@
 #include "mbed.h"
 #include <algorithm> // For sorting the array in the median filter
 
+extern "C" {
+    #include "BatterySOCEstimation_rev.h"
+}
+
 // NRF52-DK uses specific pins. Replace with the correct pins for your MCU.
 AnalogIn sensorPinA0(A0); // Define the analog pin (Replace with actual pin names if needed)
 AnalogIn sensorPinA1(A1);
@@ -52,6 +56,9 @@ void current_sense_main() {
 
         float current_a = HallEffectSensor();
         current_a = ApplyLowPassFilter(current_a); // Apply low-pass filter to smooth out the noise
+
+        // **** Update the EKF input with the measured current ****
+        BatterySOCEstimation_rev_U.In1 = current_a;
 
         // Calculate the charge (A*s)
         float charge = current_a * (interval / 1000.0);
