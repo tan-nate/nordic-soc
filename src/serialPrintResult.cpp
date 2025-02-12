@@ -19,6 +19,10 @@ and its licensor.
 #include "common.h"
 #include "serialPrintResult.h"
 
+extern "C" {
+  #include "BatterySOCEstimation_rev.h"
+}
+
 #ifdef MBED
 /**
  *******************************************************************************
@@ -292,6 +296,7 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       {
         // temperature = (voltage*1000)/10; // Voltage to Temperature Conversion for LM35
         temperature = convertVoltageToTemp(voltage);
+        BatterySOCEstimation_rev_U.In3 = temperature; // e.g., battery temperature
         if(index <= 9) 
         {
 
