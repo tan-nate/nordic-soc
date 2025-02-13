@@ -297,10 +297,9 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       {
         // temperature = (voltage*1000)/10; // Voltage to Temperature Conversion for LM35
         temperature = convertVoltageToTemp(voltage);
-        BatterySOCEstimation_rev_U.In3 = temperature; // e.g., battery temperature
-        if(index <= 9) 
+        if(index == 0) 
         {
-
+          BatterySOCEstimation_rev_U.In3 = temperature; // assign temperature to ekf input for aux1 only
           printf("V_aux%d=%f V,",(index+1), voltage);
           printf("T_aux%d=%f Celsius,",(index+1), temperature);
         }

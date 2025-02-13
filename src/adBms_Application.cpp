@@ -124,7 +124,7 @@ void run_command(int cmd)
     printf("ekf current input: %f\n", BatterySOCEstimation_rev_U.In1);
 
     BatterySOCEstimation_rev_step();
-
+    printf("ekf soc: %f\n", BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor);
     wait_us(20000000);  // 20 second delay
     break;
   }
