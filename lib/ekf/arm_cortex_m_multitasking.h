@@ -4,6 +4,8 @@
  */
  
 /* Header file for multitasking */
+#include "cmsis.h"
+
 #ifndef _ARM_CORTEX_M_MULTITASKING_
 #define _ARM_CORTEX_M_MULTITASKING_
 

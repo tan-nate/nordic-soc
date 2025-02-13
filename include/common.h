@@ -12,6 +12,11 @@ and its licensor.
 #ifndef __COMMON_H_
 #define __COMMON_H_
 
+// Force inclusion of the generated Mbed configuration first
+#include "mbed_config.h"
+
+// Then include the main Mbed header
+#include "mbed.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -21,7 +26,6 @@ and its licensor.
 #define MBED /* Switch between IAR Workbench or Mbed Studio. */
 
 #ifdef MBED
-#include "mbed.h"
 #include "cmsis.h"
 #include "SPI.h"
 #include "Timer.h"

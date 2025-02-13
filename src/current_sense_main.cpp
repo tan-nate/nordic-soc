@@ -1,4 +1,4 @@
-#include "mbed.h"
+#include "common.h"
 #include <algorithm> // For sorting the array in the median filter
 
 extern "C" {
