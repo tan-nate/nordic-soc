@@ -119,11 +119,13 @@ void run_command(int cmd)
     current_sense_main();
 
     // update and print ekf soc calculation
-    BatterySOCEstimation_rev_step();
-    double ekf_soc = BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor;
-    printf("EKF SOC: %f%%\n", ekf_soc);
+    printf("ekf temp input: %f\n", BatterySOCEstimation_rev_U.In3);
+    printf("ekf voltage input: %f\n", BatterySOCEstimation_rev_U.In2);
+    printf("ekf current input: %f\n", BatterySOCEstimation_rev_U.In1);
 
-    wait_us(1000000);  // One second delay
+    BatterySOCEstimation_rev_step();
+
+    wait_us(20000000);  // 20 second delay
     break;
   }
 
