@@ -22,6 +22,7 @@ and its licensor.
 
 #ifdef MBED
 #include "mbed.h"
+#include "cmsis.h"
 #include "SPI.h"
 #include "Timer.h"
 #endif
