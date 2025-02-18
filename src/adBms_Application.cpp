@@ -107,16 +107,29 @@ void run_command(int cmd)
   case 3: 
   {
     // Start and read cell voltages
+    printf("Reached line %d\n", __LINE__);
+
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+    printf("Reached line %d\n", __LINE__);
+
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
+    printf("Reached line %d\n", __LINE__);
+
     wait_us(500000);  // Half a second delay
+    printf("Reached line %d\n", __LINE__);
 
     // Start and read aux (temperature) voltages
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
+    printf("Reached line %d\n", __LINE__);
+
     adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
+    printf("Reached line %d\n", __LINE__);
+
 
     // Invoke current sense functionality
     current_sense_main();
+    printf("Reached line %d\n", __LINE__);
+
 
     // update and print ekf soc calculation
     printf("ekf temp input: %f\n", BatterySOCEstimation_rev_U.In3);
@@ -124,8 +137,12 @@ void run_command(int cmd)
     printf("ekf current input: %f\n", BatterySOCEstimation_rev_U.In1);
 
     BatterySOCEstimation_rev_step();
+    printf("Reached line %d\n", __LINE__);
+
     printf("ekf soc: %f\n\n\n", BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor);
     wait_us(1000000);  // 20 second delay
+    printf("Reached line %d\n", __LINE__);
+
     break;
   }
 
