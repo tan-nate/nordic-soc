@@ -44,7 +44,7 @@ P_BatterySOCEstimation_rev_T BatterySOCEstimation_rev_P = {
   /* Variable: initialSOC
    * Referenced by: '<Root>/Constant'
    */
-  0.5,
+  1.0,
 
   /* Variable: ocv_map
    * Referenced by: '<S6>/2-D Lookup Table V0'
