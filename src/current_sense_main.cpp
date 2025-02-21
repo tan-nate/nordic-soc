@@ -64,9 +64,6 @@ void current_sense_main() {
         float current_a = HallEffectSensor();
         current_a = ApplyLowPassFilter(current_a);  // Smooth out high-frequency noise
 
-        // Update the EKF input with the measured current
-        BatterySOCEstimation_rev_U.In1 = current_a;
-
         // Coulomb counting (charge in A*s)
         float charge = current_a * (interval / 1000.0f);
         totalCoulombs += charge;
@@ -134,6 +131,9 @@ float HallEffectSensor() {
 
     // Print the current reading
     printf("Current: %.3f A\n", current);
+
+    // Update the EKF input with the measured current
+    BatterySOCEstimation_rev_U.In1 = current;
 
     return current;
 }
