@@ -70,7 +70,7 @@ LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
 void app_main()
-{
+{    
 //  printMenu();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
 
@@ -104,45 +104,33 @@ void run_command(int cmd)
     adBms6830_read_config(TOTAL_IC, &IC[0]);
     break;
 
-  case 3: 
+    case 3: 
   {
     // Start and read cell voltages
-    printf("Reached line %d\n", __LINE__);
-
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-    printf("Reached line %d\n", __LINE__);
-
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-    printf("Reached line %d\n", __LINE__);
 
     wait_us(500000);  // Half a second delay
-    printf("Reached line %d\n", __LINE__);
 
     // Start and read aux (temperature) voltages
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
-    printf("Reached line %d\n", __LINE__);
-
     adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-    printf("Reached line %d\n", __LINE__);
-
 
     // Invoke current sense functionality
     current_sense_main();
-    printf("Reached line %d\n", __LINE__);
 
+    
 
-    // update and print ekf soc calculation
-    printf("ekf temp input: %f\n", BatterySOCEstimation_rev_U.In3);
-    printf("ekf voltage input: %f\n", BatterySOCEstimation_rev_U.In2);
-    printf("ekf current input: %f\n", BatterySOCEstimation_rev_U.In1);
-
+    // Run the EKF step update
     BatterySOCEstimation_rev_step();
-    printf("Reached line %d\n", __LINE__);
 
-    printf("ekf soc: %f\n\n\n", BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor);
-    wait_us(1000000);  // 20 second delay
-    printf("Reached line %d\n", __LINE__);
-
+    // New CSV-formatted output:
+    // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
+    printf("%f, %f, %f, %f\n", 
+      BatterySOCEstimation_rev_U.In1, 
+      BatterySOCEstimation_rev_U.In2, 
+      BatterySOCEstimation_rev_U.In3, 
+      BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor);
     break;
   }
 
@@ -318,7 +306,7 @@ void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC)
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   pladc_count = adBmsPollAdc(PLADC);
 #ifdef MBED
-  printf("Cell conversion completed\n");
+  // printf("Cell conversion completed\n");
 #else
   printf("Cell conversion completed\n");
 #endif
@@ -465,9 +453,9 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
 #ifdef MBED
-  printf("Aux voltage conversion completed\n");
+  // printf("Aux voltage conversion completed\n");
 #else
-  printf("Aux voltage conversion completed\n");
+  // printf("Aux voltage conversion completed\n");
 #endif
   printPollAdcConvTime(pladc_count);
 }
@@ -505,9 +493,9 @@ void adBms6830_start_raux_voltage_measurment(uint8_t tIC,  cell_asic *ic)
   adBms6830_Adax2(AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
 #ifdef MBED
-  printf("RAux voltage conversion completed\n");
+  // printf("RAux voltage conversion completed\n");
 #else
-  printf("RAux voltage conversion completed\n");
+  // printf("RAux voltage conversion completed\n");
 #endif
   printPollAdcConvTime(pladc_count);
 }

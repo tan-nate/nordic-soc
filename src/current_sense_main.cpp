@@ -78,7 +78,7 @@ void current_sense_main() {
         }
 
         // Print the updated SOC (non-blocking printf)
-        printf("State of Charge: %.2f%%\n", SOC);
+        // printf("State of Charge: %.2f%%\n", SOC);
     }
 }
 
@@ -130,7 +130,7 @@ float HallEffectSensor() {
     current = voltage_diff_mV / HALL_SENSITIVITY;
 
     // Print the current reading
-    printf("Current: %.3f A\n", current);
+    // printf("Current: %.3f A\n", current);
 
     // Update the EKF input with the measured current
     BatterySOCEstimation_rev_U.In1 = current;
