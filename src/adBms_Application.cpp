@@ -110,7 +110,7 @@ void run_command(int cmd)
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
 
-    wait_us(500000);  // Half a second delay
+    wait_us(1000000);  // One second delay
 
     // Start and read aux (temperature) voltages
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
@@ -119,13 +119,13 @@ void run_command(int cmd)
     // Invoke current sense functionality
     current_sense_main();
 
-    
-
     // Run the EKF step update
     BatterySOCEstimation_rev_step();
 
     // New CSV-formatted output:
     // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
+    // To log results, run in PlatformIO shell:
+    // pio device monitor --baud 9600 --filter default --filter time --filter log2file
     printf("%f, %f, %f, %f\n", 
       BatterySOCEstimation_rev_U.In1, 
       BatterySOCEstimation_rev_U.In2, 
