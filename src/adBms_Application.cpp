@@ -125,7 +125,8 @@ void run_command(int cmd)
     // New CSV-formatted output:
     // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
     // To log results, run in PlatformIO shell:
-    // pio device monitor --baud 9600 --filter default --filter time --filter log2file
+    // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
+
     printf("%f, %f, %f, %f\n", 
       BatterySOCEstimation_rev_U.In1, 
       BatterySOCEstimation_rev_U.In2, 
