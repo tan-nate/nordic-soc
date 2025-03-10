@@ -242,7 +242,7 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
   else if (type == RAux){channel = RAUX;}
   for(uint8_t ic = 0; ic < tIC; ic++)
   {
-    printf("IC%d:",(ic+1)); //Review this part ===BRIAN
+    // printf("IC%d:",(ic+1)); //Review this part ===BRIAN
     for(uint8_t index = 0; index < channel; index++)
     {
       if(type == Cell){ temp = IC[ic].cell.c_codes[index]; }
@@ -254,7 +254,8 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       voltage = getVoltage(temp); // Voltage Read Out
       if(type == Cell)
       {
-        printf("C%d=%fV,",(index+1), voltage);
+        // printf("C%d=%fV,",(index+1), voltage);
+        // BatterySOCEstimation_rev_U.In2 = voltage;    // assign cell voltage to ekf input
         /*if(index == (channel-1))  // CHANGE THIS BACK
         {
           printf("CCount:%d,",IC[ic].cccrc.cmd_cntr);
@@ -263,7 +264,7 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       }
       else if(type == AvgCell)
       {
-        printf("AC%d=%fV,",(index+1), voltage);
+        // printf("AC%d=%fV,",(index+1), voltage);
         if(index == (channel-1))
         {
           printf("CCount:%d,",IC[ic].cccrc.cmd_cntr);
@@ -292,11 +293,11 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       {
         // temperature = (voltage*1000)/10; // Voltage to Temperature Conversion for LM35
         temperature = convertVoltageToTemp(voltage);
-        if(index <= 9) 
+        if(index == 0) 
         {
-
-          printf("V_aux%d=%f V,",(index+1), voltage);
-          printf("T_aux%d=%f Celsius,",(index+1), temperature);
+          // BatterySOCEstimation_rev_U.In3 = temperature; // assign temperature to ekf input for aux1 only
+          // printf("V_aux%d=%f V,",(index+1), voltage);
+          // printf("T_aux%d=%f Celsius,",(index+1), temperature);
         }
         else if(index == 10)
         {
@@ -311,7 +312,7 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       }
       else if(type == RAux) 
       {
-        printf("RAUX%d=%fV,",(index+1), voltage);
+        // printf("RAUX%d=%fV,",(index+1), voltage);
         if(index == (channel-1))
         {
           //printf("CCount:%d,",IC[ic].cccrc.cmd_cntr);
@@ -1022,7 +1023,7 @@ void openWireResultPrint(uint8_t result)
 */
 void printPollAdcConvTime(int count)
 {
-  printf("Adc Conversion Time = %fms\n", (float)(count/1000.0));
+  // printf("Adc Conversion Time = %fms\n", (float)(count/1000.0));
 }
 
 /**

@@ -6,6 +6,7 @@ and its licensor.
 
 /* Includes ------------------------------------------------------------------*/
 #include "adbms_main.h"
+#include "common.h"
 
 /*
 https://os.mbed.com/platforms/SDP_K1/

@@ -25,7 +25,6 @@ and its licensor.
 
 #include "current_sense_main.h"
 
-
 /**
 *******************************************************************************
 * @brief Setup Variables
@@ -67,21 +66,21 @@ LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
 void app_main()
-{
+{    
 //  printMenu();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
+
   while(1)
   {
-//     int user_command;
-// #ifdef MBED
-//     scanf("%d", &user_command);
-//     printf("Enter cmd:%d\n", user_command);
-// #else
-//     scanf("%d", &user_command);
-//     printf("Enter cmd:%d\n", user_command);
-// #endif
-    run_command(3); // HARD CODED: print temperatures
-    current_sense_main();
+    // int user_command;
+    // #ifdef MBED
+    //     scanf("%d", &user_command);
+    //     printf("Enter cmd:%d\n", user_command);
+    // #else
+    //     scanf("%d", &user_command);
+    //     printf("Enter cmd:%d\n", user_command);
+    // #endif
+    run_command(3); // HARD CODED: print measurements
   }
 }
 
@@ -98,13 +97,13 @@ void run_command(int cmd)
     adBms6830_read_config(TOTAL_IC, &IC[0]);
     break;
 
-  case 3: // Modified to alternate between cell voltage reading and current sensing
-  while (1)
+    case 3: 
   {
     // Start and read cell voltages
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-    wait_us(500000);  // Half a second delay
+
+    wait_us(1000000);  // One second delay
 
     // Start and read aux (temperature) voltages
     adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
@@ -112,9 +111,21 @@ void run_command(int cmd)
 
     // Invoke current sense functionality
     current_sense_main();
-    wait_us(1000000);  // One second delay
+
+    // New CSV-formatted output:
+    // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
+    // To log results, run in PlatformIO shell:
+    // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
+
+    // Replace EKF inputs with ML:
+
+    // printf("%f, %f, %f, %f\n", 
+    //   BatterySOCEstimation_rev_U.In1, 
+    //   BatterySOCEstimation_rev_U.In2, 
+    //   BatterySOCEstimation_rev_U.In3, 
+    //   BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor);
+    // break;
   }
-    break;
 
   case 4:
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
@@ -288,9 +299,9 @@ void adBms6830_start_adc_cell_voltage_measurment(uint8_t tIC)
   adBms6830_Adcv(REDUNDANT_MEASUREMENT, CONTINUOUS_MEASUREMENT, DISCHARGE_PERMITTED, RESET_FILTER, CELL_OPEN_WIRE_DETECTION);
   pladc_count = adBmsPollAdc(PLADC);
 #ifdef MBED
-  printf("Cell conversion completed\n");
+  // printf("Cell conversion completed\n");
 #else
-  printf("Cell conversion completed\n");
+  // printf("Cell conversion completed\n");
 #endif
   printPollAdcConvTime(pladc_count);
 }
@@ -435,11 +446,11 @@ void adBms6830_start_aux_voltage_measurment(uint8_t tIC, cell_asic *ic)
   adBms6830_Adax(AUX_OPEN_WIRE_DETECTION, OPEN_WIRE_CURRENT_SOURCE, AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
 #ifdef MBED
-  printf("Aux voltage conversion completed\n");
+  // printf("Aux voltage conversion completed\n");
 #else
-  printf("Aux voltage conversion completed\n");
+  // printf("Aux voltage conversion completed\n");
 #endif
-  printPollAdcConvTime(pladc_count);
+  // printPollAdcConvTime(pladc_count);
 }
 
 /**
@@ -475,11 +486,11 @@ void adBms6830_start_raux_voltage_measurment(uint8_t tIC,  cell_asic *ic)
   adBms6830_Adax2(AUX_CH_TO_CONVERT);
   pladc_count = adBmsPollAdc(PLADC);
 #ifdef MBED
-  printf("RAux voltage conversion completed\n");
+  // printf("RAux voltage conversion completed\n");
 #else
-  printf("RAux voltage conversion completed\n");
+  // printf("RAux voltage conversion completed\n");
 #endif
-  printPollAdcConvTime(pladc_count);
+  // printPollAdcConvTime(pladc_count);
 }
 
 /**

@@ -24,6 +24,7 @@ and its licensor.
 
 #include "adbms_main.h"
 #include "adBms_Application.h"
+#include "common.h"
 
 void adbms_main()
 { 
