@@ -67,7 +67,20 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 
 // Edge Impulse ML
 
-// 1) Create a global buffer that the classifier will read from
+// From your model_metadata.h
+// * 10 samples per inference window
+// * 6 axes per sample
+// * Frequency ~10.309 Hz
+#define SAMPLE_COUNT        10
+#define NUM_AXES            6
+#define SAMPLE_FREQUENCY_HZ 10.30905633
+
+// Derived values
+#define TOTAL_SAMPLES       (SAMPLE_COUNT * NUM_AXES)     // 10×6 = 60
+#define SLEEP_TIME_MS       (1000 / SAMPLE_FREQUENCY_HZ)  // ~97 ms
+
+// 1) Create a global buffer that the classifier will read from.
+//    This must match EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE (which should be 60).
 static float raw_data_buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];
 
 // 2) The classifier calls this function to get data
@@ -77,27 +90,34 @@ int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
 }
 
 // Example function to read from your sensor
-float read_sensor_data() {
-    // Replace with code that reads from ADC, battery sensor, etc.
-    // We'll just return a placeholder.
-    return 1.2345f;
+void read_sensor_data(float *axis_values) {
+  // Replace with real code that reads from your hardware:
+  //   axis_values[0] = readVoltage();
+  //   axis_values[1] = readCurrent();
+  //   ...
+  // For now, we'll just set placeholders:
+  axis_values[0] = 4.2f;   // voltage
+  axis_values[1] = 1.2f;   // current
+  axis_values[2] = 2.0f;   // ah
+  axis_values[3] = 5.0f;   // power
+  axis_values[4] = 25.0f;  // battery_temp
+  axis_values[5] = 1.0f;   // brand (arbitrary placeholder)
 }
 
-// Collect data for a 50-sample window at 50 Hz (example only)
-#define SAMPLE_COUNT          50
-#define SAMPLE_FREQUENCY_HZ   50
-
+// Collect one full inference window (10 samples × 6 axes = 60 floats)
 void collect_data_for_inference() {
-    for (int i = 0; i < SAMPLE_COUNT; i++) {
-        // read the sensor
-        float val = read_sensor_data();
+  for (int i = 0; i < SAMPLE_COUNT; i++) {
+      float sensor_values[NUM_AXES];
+      read_sensor_data(sensor_values);
 
-        // store in the buffer
-        raw_data_buffer[i] = val;
+      // Store in raw_data_buffer at the correct index
+      for (int j = 0; j < NUM_AXES; j++) {
+          raw_data_buffer[i * NUM_AXES + j] = sensor_values[j];
+      }
 
-        // wait the correct interval (1000 ms / 50 Hz = 20 ms)
-        ThisThread::sleep_for(20);
-    }
+      // Wait the correct interval (~97 ms) before next sample
+      ThisThread::sleep_for((int)SLEEP_TIME_MS);
+  }
 }
 
 // We'll store classification results here
@@ -106,6 +126,10 @@ ei_impulse_result_t result;
 void app_main()
 {    
   //  printMenu();
+  printf("=== Edge Impulse: Integrating real sensor data ===\n");
+  printf("Expecting %d samples, each with %d axes (total %d floats), at %.2f Hz.\n",
+        SAMPLE_COUNT, NUM_AXES, TOTAL_SAMPLES, (float)SAMPLE_FREQUENCY_HZ);
+        
   adBms6830_init_config(TOTAL_IC, &IC[0]);
 
   while(1)
