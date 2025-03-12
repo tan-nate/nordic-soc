@@ -65,9 +65,47 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;       /*   This is ENABLED o
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
+// Edge Impulse ML
+
+// 1) Create a global buffer that the classifier will read from
+static float raw_data_buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];
+
+// 2) The classifier calls this function to get data
+int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
+    memcpy(out_ptr, raw_data_buffer + offset, length * sizeof(float));
+    return 0;
+}
+
+// Example function to read from your sensor
+float read_sensor_data() {
+    // Replace with code that reads from ADC, battery sensor, etc.
+    // We'll just return a placeholder.
+    return 1.2345f;
+}
+
+// Collect data for a 50-sample window at 50 Hz (example only)
+#define SAMPLE_COUNT          50
+#define SAMPLE_FREQUENCY_HZ   50
+
+void collect_data_for_inference() {
+    for (int i = 0; i < SAMPLE_COUNT; i++) {
+        // read the sensor
+        float val = read_sensor_data();
+
+        // store in the buffer
+        raw_data_buffer[i] = val;
+
+        // wait the correct interval (1000 ms / 50 Hz = 20 ms)
+        ThisThread::sleep_for(20);
+    }
+}
+
+// We'll store classification results here
+ei_impulse_result_t result;
+
 void app_main()
 {    
-//  printMenu();
+  //  printMenu();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
 
   while(1)
@@ -81,6 +119,37 @@ void app_main()
     //     printf("Enter cmd:%d\n", user_command);
     // #endif
     run_command(3); // HARD CODED: print measurements
+
+    // Edge Impulse ML
+    // Step A: Collect one window of data
+    collect_data_for_inference();
+
+    // Step B: Wrap the raw_data_buffer with a signal structure
+    signal_t signal;
+    signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
+    signal.get_data = &raw_feature_get_data;
+
+    // Step C: Run the classifier
+    EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);
+    if (res != EI_IMPULSE_OK) {
+        printf("run_classifier failed (%d)\n", res);
+        continue;
+    }
+
+    // Step D: Print classification
+    printf("Inference results:\n");
+    for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
+        printf("   %s: %.5f\n",
+               result.classification[ix].label,
+               result.classification[ix].value);
+    }
+
+    #if EI_CLASSIFIER_HAS_ANOMALY == 1
+        printf("   anomaly: %.3f\n", result.anomaly);
+    #endif
+
+    // Step E: Delay before running again
+    ThisThread::sleep_for(1000);
   }
 }
 
