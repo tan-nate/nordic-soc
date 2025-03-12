@@ -37,6 +37,10 @@ float totalCoulombs = 0.0f;
 // Timer for current-sensing timing
 Timer currentSenseTimer;
 
+// Declare the global raw data buffer for the ML algorithm.
+// This buffer is expected to have a size of EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE (60 floats, for example).
+extern float raw_data_buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];
+
 // Function prototypes
 float HallEffectSensor();
 float CalcMedian(int* arr_sv, size_t len_arr_sv);
@@ -50,7 +54,6 @@ void current_sense_main() {
         printf("10A Current Shunt Sensor\n");
     }
     
-    // Use Mbed’s chrono-based clock instead of the deprecated get_ms_count()
     auto currentMillis = duration_cast<milliseconds>(Kernel::Clock::now().time_since_epoch()).count();
 
     // Check if the interval has elapsed
@@ -73,8 +76,13 @@ void current_sense_main() {
             SOC = 0.0f;
         }
 
-        // Print the updated SOC (non-blocking printf)
-        // printf("State of Charge: %.2f%%\n", SOC);
+        // Instead of assigning to the EKF variable:
+        // BatterySOCEstimation_rev_U.In1 = current;
+        // Assign the current sensor measurement to the ML algorithm's raw data buffer.
+        // For example, if the ML model expects channels in the order:
+        // voltage (index 0), current (index 1), ah (index 2), power (index 3), battery_temp (index 4), brand (index 5),
+        // then we store the current measurement at index 1.
+        raw_data_buffer[1] = current_a;
     }
 }
 
@@ -118,8 +126,7 @@ float HallEffectSensor() {
     ref_voltage_mV = (vref / 1023.0f) * VOLTAGE_REFERENCE_MV;
     out_voltage_mV = (vout / 1023.0f) * VOLTAGE_REFERENCE_MV;
 
-    // For the LEM sensor, the output voltage is Uout = Uref + (Sensitivity × Current)
-    // Therefore, the difference (in mV) equals Sensitivity × Current.
+    // For the LEM sensor, Uout = Uref + (Sensitivity × Current)
     voltage_diff_mV = out_voltage_mV - ref_voltage_mV;
 
     // Calculate the current in amperes (mV divided by mV/A)
