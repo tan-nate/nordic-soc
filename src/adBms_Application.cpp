@@ -177,36 +177,36 @@ void app_main()
   }
 }
 
-// Global simulation variables
-float simulated_voltage = 4.2;   // Start at 4.2V
-float simulated_current = -1.0;  // Start discharging (-1A)
-float simulated_temperature = 22.0;  // Constant 22°C
+// // Global simulation variables
+// float simulated_voltage = 4.2;   // Start at 4.2V
+// float simulated_current = -1.0;  // Start discharging (-1A)
+// float simulated_temperature = 22.0;  // Constant 22°C
 
-void simulate_sensor_readings()
-{
-    // Update voltage based on charge/discharge cycle
-    simulated_voltage += simulated_current * 0.01; // Adjust step size as needed
+// void simulate_sensor_readings()
+// {
+//     // Update voltage based on charge/discharge cycle
+//     simulated_voltage += simulated_current * 0.01; // Adjust step size as needed
 
-    // Switch to charging when voltage reaches 2.5V
-    if (simulated_voltage <= 2.5)
-    {
-        simulated_current = 1.0; // Charge at +1A
-    }
-    // Switch to discharging when voltage reaches 4.2V
-    else if (simulated_voltage >= 4.2)
-    {
-        simulated_current = -1.0; // Discharge at -1A
-    }
+//     // Switch to charging when voltage reaches 2.5V
+//     if (simulated_voltage <= 2.5)
+//     {
+//         simulated_current = 1.0; // Charge at +1A
+//     }
+//     // Switch to discharging when voltage reaches 4.2V
+//     else if (simulated_voltage >= 4.2)
+//     {
+//         simulated_current = -1.0; // Discharge at -1A
+//     }
 
-    // Prevent voltage from exceeding 4.2V or dropping below 2.5V
-    if (simulated_voltage > 4.2) simulated_voltage = 4.2;
-    if (simulated_voltage < 2.5) simulated_voltage = 2.5;
+//     // Prevent voltage from exceeding 4.2V or dropping below 2.5V
+//     if (simulated_voltage > 4.2) simulated_voltage = 4.2;
+//     if (simulated_voltage < 2.5) simulated_voltage = 2.5;
 
-    // Assign simulated values to the ML model inputs
-    BatterySOCEstimation_rev_U.In1 = simulated_current;
-    BatterySOCEstimation_rev_U.In2 = simulated_voltage;
-    BatterySOCEstimation_rev_U.In3 = simulated_temperature;
-}
+//     // Assign simulated values to the ML model inputs
+//     BatterySOCEstimation_rev_U.In1 = simulated_current;
+//     BatterySOCEstimation_rev_U.In2 = simulated_voltage;
+//     BatterySOCEstimation_rev_U.In3 = simulated_temperature;
+// }
 
 void run_command(int cmd)
 {
