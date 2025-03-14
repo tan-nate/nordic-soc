@@ -107,18 +107,37 @@ void read_sensor_data(float *axis_values) {
 // Collect one full inference window (10 samples × 6 axes = 60 floats)
 void collect_data_for_inference() {
   for (int i = 0; i < SAMPLE_COUNT; i++) {
-      float sensor_values[NUM_AXES];
-      read_sensor_data(sensor_values);
+      
+      // 1) Start cell voltage measurement
+      adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+      adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
+      
+      // 2) Start AUX or current-sense measurement
+      adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
+      adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
+      
+      // 3) Also call current_sense_main() so it updates current reading
+      current_sense_main();
 
-      // Store in raw_data_buffer at the correct index
+      // 4) Fill your sensor values from the measured data
+      float sensor_values[NUM_AXES];
+      sensor_values[0] = /* your battery voltage from last read */;
+      sensor_values[1] = /* your measured current */;
+      sensor_values[2] = /* your capacity or any other dimension */;
+      sensor_values[3] = /* your power measurement if you have it */;
+      sensor_values[4] = /* your battery temp from last read */;
+      sensor_values[5] = /* brand or additional channel */;
+
+      // 5) Store in the raw_data_buffer
       for (int j = 0; j < NUM_AXES; j++) {
           raw_data_buffer[i * NUM_AXES + j] = sensor_values[j];
       }
 
-      // Wait the correct interval (~97 ms) before next sample
+      // 6) Wait to get ~10.31 Hz
       ThisThread::sleep_for((int)SLEEP_TIME_MS);
   }
 }
+
 
 // We'll store classification results here
 ei_impulse_result_t result;

@@ -231,7 +231,7 @@ float convertVoltageToTemp(float voltage) {
   return Temp_C;
 }
 
-void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
+void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type, float *axis_values)
 {
   float voltage;
   float temperature;
@@ -259,7 +259,7 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       {
         // printf("C%d=%fV,",(index+1), voltage);
         // BatterySOCEstimation_rev_U.In2 = voltage;    // assign cell voltage to ekf input
-        raw_data_buffer[0] = voltage;   // voltage goes to ML input index 0
+        axis_values[0] = voltage;   // voltage goes to ML input index 0
         /*if(index == (channel-1))  // CHANGE THIS BACK
         {
           printf("CCount:%d,",IC[ic].cccrc.cmd_cntr);
@@ -300,7 +300,7 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
         if(index == 0) 
         {
           // BatterySOCEstimation_rev_U.In3 = temperature; // assign temperature to ekf input for aux1 only
-          raw_data_buffer[4] = temperature;  // battery_temp goes to ML input index 4
+          axis_values[4] = temperature;  // battery_temp goes to ML input index 4
           // printf("V_aux%d=%f V,",(index+1), voltage);
           // printf("T_aux%d=%f Celsius,",(index+1), temperature);
         }

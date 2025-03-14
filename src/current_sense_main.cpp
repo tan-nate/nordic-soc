@@ -47,7 +47,7 @@ float CalcMedian(int* arr_sv, size_t len_arr_sv);
 float ApplyLowPassFilter(float current);
 
 // Main function for current sensing
-void current_sense_main() {
+void current_sense_main(float *axis_values) {
     // Start the timer on first call
     if (currentSenseTimer.elapsed_time().count() == 0) {
         currentSenseTimer.start();
@@ -82,7 +82,7 @@ void current_sense_main() {
         // For example, if the ML model expects channels in the order:
         // voltage (index 0), current (index 1), ah (index 2), power (index 3), battery_temp (index 4), brand (index 5),
         // then we store the current measurement at index 1.
-        raw_data_buffer[1] = current_a;
+        axis_values[1] = current_a;
     }
 }
 
