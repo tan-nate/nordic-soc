@@ -79,6 +79,43 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 #define TOTAL_SAMPLES       (SAMPLE_COUNT * NUM_AXES)     // 10×6 = 60
 #define SLEEP_TIME_MS       (1000 / SAMPLE_FREQUENCY_HZ)  // ~97 ms
 
+// Revised simulate_sensor_readings() function:
+// This function updates the passed array (sensor_values) with simulated data,
+// following the order required by the ML model.
+void simulate_sensor_readings(float *sensor_values) {
+  // Update simulated voltage based on current (a simple integration step)
+  simulated_voltage += simulated_current * 0.01f; // Adjust step size as needed
+
+  // Reverse current direction when voltage boundaries are reached
+  if (simulated_voltage <= 2.5f) {
+      simulated_current = 1.0f;  // Now charging
+  } else if (simulated_voltage >= 4.2f) {
+      simulated_current = -1.0f; // Now discharging
+  }
+
+  // Clamp voltage to the allowed range
+  if (simulated_voltage > 4.2f) simulated_voltage = 4.2f;
+  if (simulated_voltage < 2.5f) simulated_voltage = 2.5f;
+
+  // (Optional) Update simulated_ah and simulated_power here if you wish.
+  // For simplicity, we'll leave them constant.
+
+  // Fill the sensor_values array with simulated data
+  // The expected order is:
+  // Index 0: Voltage
+  // Index 1: Current
+  // Index 2: Ampere-hours (Ah)
+  // Index 3: Power
+  // Index 4: Battery temperature
+  // Index 5: Brand
+  sensor_values[0] = simulated_voltage;
+  sensor_values[1] = simulated_current;
+  sensor_values[2] = simulated_ah;
+  sensor_values[3] = simulated_power;
+  sensor_values[4] = simulated_temperature;
+  sensor_values[5] = simulated_brand;
+}
+
 // 1) Create a global buffer that the classifier will read from.
 //    This must match EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE (which should be 60).
 static float raw_data_buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];
@@ -192,43 +229,6 @@ float simulated_temperature = 22.0f; // Constant temperature (°C)
 float simulated_ah = 2.0f;           // Placeholder for ampere-hours (Ah)
 float simulated_power = 5.0f;        // Placeholder for power (Watts)
 float simulated_brand = 1.0f;        // Arbitrary placeholder
-
-// Revised simulate_sensor_readings() function:
-// This function updates the passed array (sensor_values) with simulated data,
-// following the order required by the ML model.
-void simulate_sensor_readings(float *sensor_values) {
-    // Update simulated voltage based on current (a simple integration step)
-    simulated_voltage += simulated_current * 0.01f; // Adjust step size as needed
-
-    // Reverse current direction when voltage boundaries are reached
-    if (simulated_voltage <= 2.5f) {
-        simulated_current = 1.0f;  // Now charging
-    } else if (simulated_voltage >= 4.2f) {
-        simulated_current = -1.0f; // Now discharging
-    }
-
-    // Clamp voltage to the allowed range
-    if (simulated_voltage > 4.2f) simulated_voltage = 4.2f;
-    if (simulated_voltage < 2.5f) simulated_voltage = 2.5f;
-
-    // (Optional) Update simulated_ah and simulated_power here if you wish.
-    // For simplicity, we'll leave them constant.
-
-    // Fill the sensor_values array with simulated data
-    // The expected order is:
-    // Index 0: Voltage
-    // Index 1: Current
-    // Index 2: Ampere-hours (Ah)
-    // Index 3: Power
-    // Index 4: Battery temperature
-    // Index 5: Brand
-    sensor_values[0] = simulated_voltage;
-    sensor_values[1] = simulated_current;
-    sensor_values[2] = simulated_ah;
-    sensor_values[3] = simulated_power;
-    sensor_values[4] = simulated_temperature;
-    sensor_values[5] = simulated_brand;
-}
 
 void run_command(int cmd)
 {
