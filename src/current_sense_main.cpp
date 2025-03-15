@@ -1,6 +1,7 @@
 #include "common.h"
 #include <algorithm>
 #include <chrono>
+#include "edge_impulse_data.h"
 
 using namespace std::chrono;
 
@@ -39,7 +40,7 @@ Timer currentSenseTimer;
 
 // Declare the global raw data buffer for the ML algorithm.
 // This buffer is expected to have a size of EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE (60 floats, for example).
-extern float raw_data_buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];
+float raw_data_buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];
 
 // Function prototypes
 float HallEffectSensor();
