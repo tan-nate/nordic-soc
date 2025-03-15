@@ -89,54 +89,38 @@ int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
     return 0;
 }
 
-// Example function to read from your sensor
-void read_sensor_data(float *axis_values) {
-  // Replace with real code that reads from your hardware:
-  //   axis_values[0] = readVoltage();
-  //   axis_values[1] = readCurrent();
-  //   ...
-  // For now, we'll just set placeholders:
-  axis_values[0] = 4.2f;   // voltage
-  axis_values[1] = 1.2f;   // current
-  axis_values[2] = 2.0f;   // ah
-  axis_values[3] = 5.0f;   // power
-  axis_values[4] = 25.0f;  // battery_temp
-  axis_values[5] = 1.0f;   // brand (arbitrary placeholder)
-}
-
 // Collect one full inference window (10 samples × 6 axes = 60 floats)
 void collect_data_for_inference() {
-  for (int i = 0; i < SAMPLE_COUNT; i++) {
-      
-      // 1) Start cell voltage measurement
+  // We want 10 samples, each with 6 axes = 60 floats in raw_data_buffer
+  for (int sample_idx = 0; sample_idx < SAMPLE_COUNT; sample_idx++) {
+
+      // (1) Read your data into local sensor_values
+      float sensor_values[NUM_AXES] = {0};
+
       adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
       adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-      
-      // 2) Start AUX or current-sense measurement
+      printVoltages(TOTAL_IC, &IC[0], Cell, sensor_values);
+
       adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
       adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-      
-      // 3) Also call current_sense_main() so it updates current reading
-      current_sense_main();
+      printVoltages(TOTAL_IC, &IC[0], Aux, sensor_values);
 
-      // 4) Fill your sensor values from the measured data
-      float sensor_values[NUM_AXES];
-      sensor_values[0] = /* your battery voltage from last read */;
-      sensor_values[1] = /* your measured current */;
-      sensor_values[2] = /* your capacity or any other dimension */;
-      sensor_values[3] = /* your power measurement if you have it */;
-      sensor_values[4] = /* your battery temp from last read */;
-      sensor_values[5] = /* brand or additional channel */;
+      // Possibly call current_sense_main(sensor_values) or any other sensor code
+      current_sense_main(sensor_values);
 
-      // 5) Store in the raw_data_buffer
+      // (2) Copy to raw_data_buffer
+      // sample_idx * NUM_AXES is the offset for the start of this sample
       for (int j = 0; j < NUM_AXES; j++) {
-          raw_data_buffer[i * NUM_AXES + j] = sensor_values[j];
+          raw_data_buffer[sample_idx * NUM_AXES + j] = sensor_values[j];
       }
 
-      // 6) Wait to get ~10.31 Hz
+      // (3) Wait ~97ms to achieve 10.31 Hz
       ThisThread::sleep_for((int)SLEEP_TIME_MS);
   }
+  // Here raw_data_buffer[] has a full window of 10×6 = 60 floats
+  // Then you can immediately run inference (or do it outside)
 }
+
 
 
 // We'll store classification results here
@@ -161,7 +145,6 @@ void app_main()
     //     scanf("%d", &user_command);
     //     printf("Enter cmd:%d\n", user_command);
     // #endif
-    run_command(3); // HARD CODED: print measurements
 
     // Edge Impulse ML
     // Step A: Collect one window of data
@@ -269,7 +252,7 @@ void run_command(int cmd)
     adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
 
     // Invoke current sense functionality
-    current_sense_main();
+    // current_sense_main();
 
     // New CSV-formatted output:
     // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
@@ -479,7 +462,6 @@ void adBms6830_read_cell_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDCVD, Cell, D);
   adBmsReadData(tIC, &ic[0], RDCVE, Cell, E);
   adBmsReadData(tIC, &ic[0], RDCVF, Cell, F);
-  printVoltages(tIC, &ic[0], Cell);
 }
 
 /**
@@ -514,7 +496,7 @@ void adBms6830_read_s_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDSVD, S_volt, D);
   adBmsReadData(tIC, &ic[0], RDSVE, S_volt, E);
   adBmsReadData(tIC, &ic[0], RDSVF, S_volt, F);
-  printVoltages(tIC, &ic[0], S_volt);
+  // printVoltages(tIC, &ic[0], S_volt);
 }
 
 /**
@@ -549,7 +531,7 @@ void adBms6830_read_avgcell_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDACD, AvgCell, D);
   adBmsReadData(tIC, &ic[0], RDACE, AvgCell, E);
   adBmsReadData(tIC, &ic[0], RDACF, AvgCell, F);
-  printVoltages(tIC, &ic[0], AvgCell);
+  // printVoltages(tIC, &ic[0], AvgCell);
 }
 
 /**
@@ -584,7 +566,7 @@ void adBms6830_read_fcell_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDFCD, F_volt, D);
   adBmsReadData(tIC, &ic[0], RDFCE, F_volt, E);
   adBmsReadData(tIC, &ic[0], RDFCF, F_volt, F);
-  printVoltages(tIC, &ic[0], F_volt);
+  // printVoltages(tIC, &ic[0], F_volt);
 }
 
 /**
@@ -624,7 +606,6 @@ void adBms6830_read_aux_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDAUXB, Aux, B);
   adBmsReadData(tIC, &ic[0], RDAUXC, Aux, C);
   adBmsReadData(tIC, &ic[0], RDAUXD, Aux, D);
-  printVoltages(tIC, &ic[0], Aux);
 }
 
 /**
@@ -664,7 +645,7 @@ void adBms6830_read_raux_voltages(uint8_t tIC, cell_asic *ic)
   adBmsReadData(tIC, &ic[0], RDRAXB, RAux, B);
   adBmsReadData(tIC, &ic[0], RDRAXC, RAux, C);
   adBmsReadData(tIC, &ic[0], RDRAXD, RAux, D);
-  printVoltages(tIC, &ic[0], RAux);
+  // printVoltages(tIC, &ic[0], RAux);
 }
 
 /**
@@ -706,7 +687,7 @@ void measurement_loop()
     adBmsReadData(TOTAL_IC, &IC[0], RDCVD, Cell, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDCVE, Cell, E);
     adBmsReadData(TOTAL_IC, &IC[0], RDCVF, Cell, F);
-    printVoltages(TOTAL_IC, &IC[0], Cell);
+    // printVoltages(TOTAL_IC, &IC[0], Cell);
   }
 
   if(MEASURE_AVG_CELL == ENABLED)
@@ -717,7 +698,7 @@ void measurement_loop()
     adBmsReadData(TOTAL_IC, &IC[0], RDACD, AvgCell, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDACE, AvgCell, E);
     adBmsReadData(TOTAL_IC, &IC[0], RDACF, AvgCell, F);
-    printVoltages(TOTAL_IC, &IC[0], AvgCell);
+    // printVoltages(TOTAL_IC, &IC[0], AvgCell);
   }
 
   if(MEASURE_F_CELL == ENABLED)
@@ -728,7 +709,7 @@ void measurement_loop()
     adBmsReadData(TOTAL_IC, &IC[0], RDFCD, F_volt, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDFCE, F_volt, E);
     adBmsReadData(TOTAL_IC, &IC[0], RDFCF, F_volt, F);
-    printVoltages(TOTAL_IC, &IC[0], F_volt);
+    // printVoltages(TOTAL_IC, &IC[0], F_volt);
   }
 
   if(MEASURE_S_VOLTAGE == ENABLED)
@@ -739,7 +720,7 @@ void measurement_loop()
     adBmsReadData(TOTAL_IC, &IC[0], RDSVD, S_volt, D);
     adBmsReadData(TOTAL_IC, &IC[0], RDSVE, S_volt, E);
     adBmsReadData(TOTAL_IC, &IC[0], RDSVF, S_volt, F);
-    printVoltages(TOTAL_IC, &IC[0], S_volt);
+    // printVoltages(TOTAL_IC, &IC[0], S_volt);
   }
 
   if(MEASURE_AUX == ENABLED)
@@ -750,7 +731,7 @@ void measurement_loop()
     adBmsReadData(TOTAL_IC, &IC[0], RDAUXB, Aux, B);
     adBmsReadData(TOTAL_IC, &IC[0], RDAUXC, Aux, C);
     adBmsReadData(TOTAL_IC, &IC[0], RDAUXD, Aux, D);
-    printVoltages(TOTAL_IC, &IC[0], Aux);
+    // printVoltages(TOTAL_IC, &IC[0], Aux);
   }
 
   if(MEASURE_RAUX == ENABLED)
@@ -762,7 +743,7 @@ void measurement_loop()
     adBmsReadData(TOTAL_IC, &IC[0], RDRAXB, RAux, B);
     adBmsReadData(TOTAL_IC, &IC[0], RDRAXC, RAux, C);
     adBmsReadData(TOTAL_IC, &IC[0], RDRAXD, RAux, D);
-    printVoltages(TOTAL_IC, &IC[0], RAux);
+    // printVoltages(TOTAL_IC, &IC[0], RAux);
   }
 
   if(MEASURE_STAT == ENABLED)

@@ -26,7 +26,7 @@ and its licensor.
 
 void printWriteConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp);
 void printReadConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp);
-void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type);
+void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type, float *axis_values);
 void printStatus(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp);
 void printDeviceSID(uint8_t tIC, cell_asic *IC, TYPE type);
 void printWritePwmDutyCycle(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp);
