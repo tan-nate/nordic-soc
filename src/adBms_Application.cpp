@@ -91,37 +91,42 @@ int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
 
 // Collect one full inference window (10 samples × 6 axes = 60 floats)
 void collect_data_for_inference() {
-  // We want 10 samples, each with 6 axes = 60 floats in raw_data_buffer
+  // We want SAMPLE_COUNT = 10 samples, each with NUM_AXES = 6 floats,
+  // so that raw_data_buffer[] ends up with 10*6 = 60 floats.
   for (int sample_idx = 0; sample_idx < SAMPLE_COUNT; sample_idx++) {
 
-      // (1) Read your data into local sensor_values
+      // Create a local array to hold one sample reading.
       float sensor_values[NUM_AXES] = {0};
 
-      adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-      adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-      printVoltages(TOTAL_IC, &IC[0], Cell, sensor_values);
+      // If you are simulating sensor readings instead of using the real hardware,
+      // call simulate_sensor_readings() to fill sensor_values.
+      simulate_sensor_readings(sensor_values);
 
-      adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
-      adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-      printVoltages(TOTAL_IC, &IC[0], Aux, sensor_values);
+      // If you are combining simulated readings with real hardware reads,
+      // you could also call your sensor read functions (e.g., read cell voltages,
+      // AUX, current_sense_main, etc.) that update sensor_values.
+      // For example:
+      // adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+      // adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
+      // printVoltages(TOTAL_IC, &IC[0], Cell, sensor_values);
+      //
+      // adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
+      // adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
+      // printVoltages(TOTAL_IC, &IC[0], Aux, sensor_values);
+      //
+      // current_sense_main(sensor_values);
 
-      // Possibly call current_sense_main(sensor_values) or any other sensor code
-      current_sense_main(sensor_values);
-
-      // (2) Copy to raw_data_buffer
-      // sample_idx * NUM_AXES is the offset for the start of this sample
+      // Now copy this sample into the global raw_data_buffer.
+      // The offset is sample_idx * NUM_AXES.
       for (int j = 0; j < NUM_AXES; j++) {
           raw_data_buffer[sample_idx * NUM_AXES + j] = sensor_values[j];
       }
 
-      // (3) Wait ~97ms to achieve 10.31 Hz
+      // Wait for ~97 ms to maintain the sampling frequency (~10.31 Hz)
       ThisThread::sleep_for((int)SLEEP_TIME_MS);
   }
-  // Here raw_data_buffer[] has a full window of 10×6 = 60 floats
-  // Then you can immediately run inference (or do it outside)
+  // At this point, raw_data_buffer[] holds a full window (60 floats) for inference.
 }
-
-
 
 // We'll store classification results here
 ei_impulse_result_t result;
