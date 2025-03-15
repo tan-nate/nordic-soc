@@ -179,36 +179,51 @@ void app_main()
   }
 }
 
-// // Global simulation variables
-// float simulated_voltage = 4.2;   // Start at 4.2V
-// float simulated_current = -1.0;  // Start discharging (-1A)
-// float simulated_temperature = 22.0;  // Constant 22°C
+// Global simulation variables
+float simulated_voltage = 4.2f;      // Starting voltage (Volts)
+float simulated_current = -1.0f;     // Starting current (Amperes, negative for discharging)
+float simulated_temperature = 22.0f; // Constant temperature (°C)
+// You can use constant placeholders for these if you don’t want to simulate changes:
+float simulated_ah = 2.0f;           // Placeholder for ampere-hours (Ah)
+float simulated_power = 5.0f;        // Placeholder for power (Watts)
+float simulated_brand = 1.0f;        // Arbitrary placeholder
 
-// void simulate_sensor_readings()
-// {
-//     // Update voltage based on charge/discharge cycle
-//     simulated_voltage += simulated_current * 0.01; // Adjust step size as needed
+// Revised simulate_sensor_readings() function:
+// This function updates the passed array (sensor_values) with simulated data,
+// following the order required by the ML model.
+void simulate_sensor_readings(float *sensor_values) {
+    // Update simulated voltage based on current (a simple integration step)
+    simulated_voltage += simulated_current * 0.01f; // Adjust step size as needed
 
-//     // Switch to charging when voltage reaches 2.5V
-//     if (simulated_voltage <= 2.5)
-//     {
-//         simulated_current = 1.0; // Charge at +1A
-//     }
-//     // Switch to discharging when voltage reaches 4.2V
-//     else if (simulated_voltage >= 4.2)
-//     {
-//         simulated_current = -1.0; // Discharge at -1A
-//     }
+    // Reverse current direction when voltage boundaries are reached
+    if (simulated_voltage <= 2.5f) {
+        simulated_current = 1.0f;  // Now charging
+    } else if (simulated_voltage >= 4.2f) {
+        simulated_current = -1.0f; // Now discharging
+    }
 
-//     // Prevent voltage from exceeding 4.2V or dropping below 2.5V
-//     if (simulated_voltage > 4.2) simulated_voltage = 4.2;
-//     if (simulated_voltage < 2.5) simulated_voltage = 2.5;
+    // Clamp voltage to the allowed range
+    if (simulated_voltage > 4.2f) simulated_voltage = 4.2f;
+    if (simulated_voltage < 2.5f) simulated_voltage = 2.5f;
 
-//     // Assign simulated values to the ML model inputs
-//     BatterySOCEstimation_rev_U.In1 = simulated_current;
-//     BatterySOCEstimation_rev_U.In2 = simulated_voltage;
-//     BatterySOCEstimation_rev_U.In3 = simulated_temperature;
-// }
+    // (Optional) Update simulated_ah and simulated_power here if you wish.
+    // For simplicity, we'll leave them constant.
+
+    // Fill the sensor_values array with simulated data
+    // The expected order is:
+    // Index 0: Voltage
+    // Index 1: Current
+    // Index 2: Ampere-hours (Ah)
+    // Index 3: Power
+    // Index 4: Battery temperature
+    // Index 5: Brand
+    sensor_values[0] = simulated_voltage;
+    sensor_values[1] = simulated_current;
+    sensor_values[2] = simulated_ah;
+    sensor_values[3] = simulated_power;
+    sensor_values[4] = simulated_temperature;
+    sensor_values[5] = simulated_brand;
+}
 
 void run_command(int cmd)
 {
