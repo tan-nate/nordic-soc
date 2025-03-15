@@ -65,19 +65,15 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;       /*   This is ENABLED o
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
-// Edge Impulse ML
-
-// From your model_metadata.h
-// * 10 samples per inference window
-// * 6 axes per sample
-// * Frequency ~10.309 Hz
-#define SAMPLE_COUNT        10
-#define NUM_AXES            6
-#define SAMPLE_FREQUENCY_HZ 10.30905633
-
-// Derived values
-#define TOTAL_SAMPLES       (SAMPLE_COUNT * NUM_AXES)     // 10×6 = 60
-#define SLEEP_TIME_MS       (1000 / SAMPLE_FREQUENCY_HZ)  // ~97 ms
+// SIMULATE SENSORS
+// Global simulation variables
+float simulated_voltage = 4.2f;      // Starting voltage (Volts)
+float simulated_current = -1.0f;     // Starting current (Amperes, negative for discharging)
+float simulated_temperature = 22.0f; // Constant temperature (°C)
+// You can use constant placeholders for these if you don’t want to simulate changes:
+float simulated_ah = 2.0f;           // Placeholder for ampere-hours (Ah)
+float simulated_power = 5.0f;        // Placeholder for power (Watts)
+float simulated_brand = 1.0f;        // Arbitrary placeholder
 
 // Revised simulate_sensor_readings() function:
 // This function updates the passed array (sensor_values) with simulated data,
@@ -115,6 +111,20 @@ void simulate_sensor_readings(float *sensor_values) {
   sensor_values[4] = simulated_temperature;
   sensor_values[5] = simulated_brand;
 }
+
+// Edge Impulse ML
+
+// From your model_metadata.h
+// * 10 samples per inference window
+// * 6 axes per sample
+// * Frequency ~10.309 Hz
+#define SAMPLE_COUNT        10
+#define NUM_AXES            6
+#define SAMPLE_FREQUENCY_HZ 10.30905633
+
+// Derived values
+#define TOTAL_SAMPLES       (SAMPLE_COUNT * NUM_AXES)     // 10×6 = 60
+#define SLEEP_TIME_MS       (1000 / SAMPLE_FREQUENCY_HZ)  // ~97 ms
 
 // 1) Create a global buffer that the classifier will read from.
 //    This must match EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE (which should be 60).
@@ -220,15 +230,6 @@ void app_main()
     ThisThread::sleep_for(1000);
   }
 }
-
-// Global simulation variables
-float simulated_voltage = 4.2f;      // Starting voltage (Volts)
-float simulated_current = -1.0f;     // Starting current (Amperes, negative for discharging)
-float simulated_temperature = 22.0f; // Constant temperature (°C)
-// You can use constant placeholders for these if you don’t want to simulate changes:
-float simulated_ah = 2.0f;           // Placeholder for ampere-hours (Ah)
-float simulated_power = 5.0f;        // Placeholder for power (Watts)
-float simulated_brand = 1.0f;        // Arbitrary placeholder
 
 void run_command(int cmd)
 {
