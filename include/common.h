@@ -24,8 +24,7 @@ and its licensor.
 #include <stdbool.h>
 
 // Edge Impulse
-#include "ei_run_classifier.h"
-#include "numpy.hpp"
+#include "edge-impulse-sdk/classifier/ei_run_classifier.h"
 
 #define MBED /* Switch between IAR Workbench or Mbed Studio. */
 
