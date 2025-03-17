@@ -16,6 +16,9 @@ and its licensor.
 /*! @addtogroup Application
 *  @{
 */
+// Edge Impulse
+#include "edge-impulse-sdk/classifier/ei_run_classifier.h"
+
 #include "common.h"
 #include "adBms_Application.h"
 #include "adBms6830CmdList.h"

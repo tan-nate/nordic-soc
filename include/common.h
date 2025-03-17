@@ -23,9 +23,6 @@ and its licensor.
 #include <string.h>
 #include <stdbool.h>
 
-// Edge Impulse
-#include "edge-impulse-sdk/classifier/ei_run_classifier.h"
-
 #define MBED /* Switch between IAR Workbench or Mbed Studio. */
 
 #ifdef MBED
