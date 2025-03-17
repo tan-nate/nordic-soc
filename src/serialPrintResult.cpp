@@ -41,7 +41,7 @@ and its licensor.
  *******************************************************************************
 */
 
-extern float raw_data_buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];
+extern float raw_data_buffer[60];
 
 void printWriteConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
 {
