@@ -118,6 +118,9 @@ void simulate_sensor_readings(float *sensor_values) {
 
 // Edge Impulse ML
 
+const int EI_FRAME_SIZE = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE; // Define it here
+float raw_data_buffer[EI_FRAME_SIZE] = {0};
+
 // From your model_metadata.h
 // * 10 samples per inference window
 // * 6 axes per sample

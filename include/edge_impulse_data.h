@@ -1,8 +1,12 @@
 #ifndef EDGE_IMPULSE_DATA_H
 #define EDGE_IMPULSE_DATA_H
 
-#include "common.h"  // or whichever header contains the definition
+// Notice we do NOT include "metadata.h" here!
 
-extern float raw_data_buffer[EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE];
+// 1) Declare an external constant for the frame size.
+extern const int EI_FRAME_SIZE;
+
+// 2) Externally declare your raw buffer (no size).
+extern float raw_data_buffer[];
 
 #endif // EDGE_IMPULSE_DATA_H
