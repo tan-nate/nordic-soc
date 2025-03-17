@@ -4,6 +4,6 @@
 // Notice we do NOT include "metadata.h" here!
 
 // 2) Externally declare your raw buffer (no size).
-extern float raw_data_buffer[];
+extern float raw_data_buffer[60];
 
 #endif // EDGE_IMPULSE_DATA_H

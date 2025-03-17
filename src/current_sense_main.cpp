@@ -38,10 +38,6 @@ float totalCoulombs = 0.0f;
 // Timer for current-sensing timing
 Timer currentSenseTimer;
 
-// Declare the global raw data buffer for the ML algorithm.
-// This buffer is expected to have a size of EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE (60 floats, for example).
-float raw_data_buffer[60];
-
 // Function prototypes
 float HallEffectSensor();
 float CalcMedian(int* arr_sv, size_t len_arr_sv);

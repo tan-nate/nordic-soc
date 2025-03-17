@@ -41,8 +41,6 @@ and its licensor.
  *******************************************************************************
 */
 
-extern float raw_data_buffer[60];
-
 void printWriteConfig(uint8_t tIC, cell_asic *IC, TYPE type, GRP grp)
 {
   for(uint8_t ic = 0; ic < tIC; ic++)

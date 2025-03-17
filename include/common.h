@@ -17,6 +17,7 @@ and its licensor.
 
 // Then include the main Mbed header
 #include "mbed.h"
+#include "arm_math.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
