@@ -65,6 +65,7 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;       /*   This is ENABLED o
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
+// BAUD RATE IS 9600
 void app_main()
 {    
 //  printMenu();
