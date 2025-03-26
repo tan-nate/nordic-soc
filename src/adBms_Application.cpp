@@ -119,20 +119,20 @@ void simulate_sensor_readings(float *sensor_values) {
 // Edge Impulse ML
 
 // From your model_metadata.h
-// * 10 samples per inference window (EI_CLASSIFIER_RAW_SAMPLE_COUNT)
-// * 6 axes per sample (EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME)
-// * Frequency ~10.309 Hz (EI_CLASSIFIER_FREQUENCY)
-#define SAMPLE_COUNT        10
-#define NUM_AXES            6
-#define SAMPLE_FREQUENCY_HZ 10.30905633
+#define SAMPLE_COUNT        1            // EI_CLASSIFIER_RAW_SAMPLE_COUNT
+#define NUM_AXES            1500             // EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME
+
+// Based on dominant Δt ≈ 0.1s in training data (HPPC + CC), we use 10 Hz sampling
+// hard code into EI_CLASSIFIER_FREQUENCY in model_metadata.h accordingly
+#define SAMPLE_FREQUENCY_HZ 10.0f   // EI_CLASSIFIER_FREQUENCY
 
 // Derived values
-#define TOTAL_SAMPLES       (SAMPLE_COUNT * NUM_AXES)     // 10×6 = 60
-#define SLEEP_TIME_MS       (1000 / SAMPLE_FREQUENCY_HZ)  // ~97 ms
+#define TOTAL_SAMPLES       (SAMPLE_COUNT * NUM_AXES)     // 
+#define SLEEP_TIME_MS       (1000 / SAMPLE_FREQUENCY_HZ)  //
 
 // 1) Create a global buffer that the classifier will read from.
-//    This must match EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE (which should be 60).
-float raw_data_buffer[60] = {};
+//    This must match EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE.
+float raw_data_buffer[1500] = {};
 
 // 2) The classifier calls this function to get data
 int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
@@ -142,8 +142,8 @@ int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
 
 // Collect one full inference window (10 samples × 6 axes = 60 floats)
 void collect_data_for_inference() {
-  // We want SAMPLE_COUNT = 10 samples, each with NUM_AXES = 6 floats,
-  // so that raw_data_buffer[] ends up with 10*6 = 60 floats.
+  // We want SAMPLE_COUNT samples, each with NUM_AXES floats,
+  // so that raw_data_buffer[] ends up with SAMPLE_COUNT * NUM_AXES floats.
   for (int sample_idx = 0; sample_idx < SAMPLE_COUNT; sample_idx++) {
 
       // Create a local array to hold one sample reading.
