@@ -292,7 +292,7 @@ void run_command(int cmd)
     //   BatterySOCEstimation_rev_U.In2, 
     //   BatterySOCEstimation_rev_U.In3, 
     //   BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor);
-    // break;
+    break;
   }
 
   case 4:
