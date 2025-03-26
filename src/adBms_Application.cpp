@@ -132,6 +132,7 @@ void simulate_sensor_readings(float *sensor_values) {
 
 // 1) Create a global buffer that the classifier will read from.
 //    This must match EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE.
+//    also update this in edge_impulse_data.h
 float raw_data_buffer[1500] = {};
 
 // 2) The classifier calls this function to get data
