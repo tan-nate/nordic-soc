@@ -119,9 +119,9 @@ void simulate_sensor_readings(float *sensor_values) {
 // Edge Impulse ML
 
 // From your model_metadata.h
-// * 10 samples per inference window
-// * 6 axes per sample
-// * Frequency ~10.309 Hz
+// * 10 samples per inference window (EI_CLASSIFIER_RAW_SAMPLE_COUNT)
+// * 6 axes per sample (EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME)
+// * Frequency ~10.309 Hz (EI_CLASSIFIER_FREQUENCY)
 #define SAMPLE_COUNT        10
 #define NUM_AXES            6
 #define SAMPLE_FREQUENCY_HZ 10.30905633
