@@ -67,6 +67,28 @@
 #endif
 #endif
 
+#define STRINGIZE(x) #x
+#define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
+
+#if defined (__GNUC__)  /* GNU compiler */
+#define ALIGN(X) __attribute__((aligned(X)))
+#define DEFINE_SECTION(x) __attribute__((section(x)))
+#elif defined (_MSC_VER)
+#define ALIGN(X) __declspec(align(X))
+#elif defined (__TASKING__) /* TASKING Compiler */
+#define ALIGN(X) __align(X)
+#define DEFINE_SECTION(x) __attribute__((section(x)))
+#elif defined (__ARMCC_VERSION) /* Arm Compiler */
+#define ALIGN(X) __ALIGNED(x)
+#define DEFINE_SECTION(x) __attribute__((section(x)))
+#elif defined (__ICCARM__) /* IAR Compiler */
+#define ALIGN(x) __attribute__((aligned(x)))
+#define DEFINE_SECTION(x) __attribute__((section(x)))
+#elif defined (__clang__) /* LLVM/Clang Compiler */
+#define ALIGN(X) __ALIGNED(x)
+#define DEFINE_SECTION(x) __attribute__((section(x)))
+#endif
+
 /**
  * Setup the TFLite runtime
  *
@@ -95,7 +117,7 @@ static EI_IMPULSE_ERROR inference_tflite_setup(
 
 #ifdef EI_CLASSIFIER_ALLOCATION_STATIC
     // Assign a no-op lambda to the "free" function in case of static arena
-    static uint8_t tensor_arena[EI_CLASSIFIER_TFLITE_LARGEST_ARENA_SIZE] ALIGN(16);
+    static uint8_t tensor_arena[EI_CLASSIFIER_TFLITE_LARGEST_ARENA_SIZE] ALIGN(16) DEFINE_SECTION(STRINGIZE_VALUE_OF(EI_TENSOR_ARENA_LOCATION));
     p_tensor_arena = ei_unique_ptr_t(tensor_arena, [](void*){});
 #else
     // Create an area of memory to use for input, output, and intermediate arrays.
