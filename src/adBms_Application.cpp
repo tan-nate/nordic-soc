@@ -109,8 +109,8 @@ void simulate_sensor_readings(float *sensor_values) {
 // Edge Impulse ML
 
 // From your model_metadata.h
-#define SAMPLE_COUNT        1            // EI_CLASSIFIER_RAW_SAMPLE_COUNT
-#define NUM_AXES            1500             // EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME
+#define SAMPLE_COUNT        500            // EI_CLASSIFIER_RAW_SAMPLE_COUNT
+#define NUM_AXES            3             // EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME
 
 // Based on dominant Δt ≈ 0.1s in training data (HPPC + CC), we use 10 Hz sampling
 // hard code into EI_CLASSIFIER_FREQUENCY in model_metadata.h accordingly

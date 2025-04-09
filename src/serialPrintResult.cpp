@@ -298,7 +298,7 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type, float *axis_values)
         if(index == 0) 
         {
           // BatterySOCEstimation_rev_U.In3 = temperature; // assign temperature to ekf input for aux1 only
-          axis_values[4] = temperature;  // battery_temp goes to ML input index 4
+          axis_values[2] = temperature;  // battery_temp goes to ML input index 4
           // printf("V_aux%d=%f V,",(index+1), voltage);
           // printf("T_aux%d=%f Celsius,",(index+1), temperature);
         }
