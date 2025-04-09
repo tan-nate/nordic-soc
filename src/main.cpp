@@ -4,29 +4,29 @@ This software is proprietary & confidential to Analog Devices, Inc.
 and its licensor.
 ------------------------------------------------------------------------------*/
 
-/* Includes ------------------------------------------------------------------*/
+#include "mbed.h"    // <-- This brings in DigitalOut, DigitalIn, SPI, Timer, wait_us(), etc.
 #include "adbms_main.h"
 #include "common.h"
 
 /*
 https://os.mbed.com/platforms/SDP_K1/
-Mbed SDP-K1 board MOSI, MOSI, SCK definition.
+Mbed SDP-K1 board MOSI, MISO, SCK definition.
 Arduino Header Pinout
-MOSI = D11`
+MOSI = D11
 MISO = D12
 SCK  = D13
 CSB =  D10
 */
+
 int main(void);
 void spi_init(void);
 
-DigitalOut chip_select(D10);                /* SPI chip select */
-DigitalOut mosi(D11);                       /* MOSI */
-DigitalIn miso(D12);                        /* MISO */
-DigitalOut sclk(D13);                       /* SCK */
-SPI spi(D11, D12, D13);                     /* SPI MOSI, MISO, SCK */
+DigitalOut chip_select(D10);    // SPI chip select
+DigitalOut mosi(D11);           // MOSI
+DigitalIn  miso(D12);           // MISO
+DigitalOut sclk(D13);           // SCK
+SPI spi(D11, D12, D13);         // SPI MOSI, MISO, SCK
 Timer timer;
-
 
 int main()
 {
@@ -43,6 +43,6 @@ int main()
 void spi_init()
 {   
     chip_select = 1;
-    spi.format(8,0);            /* 8bit data, CPOL-CPHA= 0*/
-    spi.frequency(2000000);     /* SPI clock 2Mhz */
+    spi.format(8, 0);            // 8-bit data, CPOL=0, CPHA=0
+    spi.frequency(2000000);        // SPI clock 2MHz
 }

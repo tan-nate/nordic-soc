@@ -131,12 +131,11 @@ int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
     return 0;
 }
 
-// Collect one full inference window (10 samples × 6 axes = 60 floats)
+// Collect one full inference window  
 void collect_data_for_inference() {
   // We want SAMPLE_COUNT samples, each with NUM_AXES floats,
   // so that raw_data_buffer[] ends up with SAMPLE_COUNT * NUM_AXES floats.
   for (int sample_idx = 0; sample_idx < SAMPLE_COUNT; sample_idx++) {
-
       // Create a local array to hold one sample reading.
       float sensor_values[NUM_AXES] = {0};
 
@@ -144,10 +143,8 @@ void collect_data_for_inference() {
       // call simulate_sensor_readings() to fill sensor_values.
       // simulate_sensor_readings(sensor_values);
 
-      // If you are combining simulated readings with real hardware reads,
-      // you could also call your sensor read functions (e.g., read cell voltages,
-      // AUX, current_sense_main, etc.) that update sensor_values.
-      // For example:
+      // real sensor readings:
+
       adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
       adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
       printVoltages(TOTAL_IC, &IC[0], Cell, sensor_values);
@@ -162,6 +159,15 @@ void collect_data_for_inference() {
       // The offset is sample_idx * NUM_AXES.
       for (int j = 0; j < NUM_AXES; j++) {
           raw_data_buffer[sample_idx * NUM_AXES + j] = sensor_values[j];
+      }
+
+      if (sample_idx % 50 == 0) {
+        printf("   Collected %d of %d samples...\n", sample_idx, SAMPLE_COUNT);
+      }
+
+      if (sample_idx % 100 == 0) {
+        printf("Sample %d: V=%.3f, I=%.3f, T=%.2f\n", sample_idx,
+          sensor_values[0], sensor_values[1], sensor_values[2]);
       }
 
       // Wait for ~97 ms to maintain the sampling frequency (~10.31 Hz)
