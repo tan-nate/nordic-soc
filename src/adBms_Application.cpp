@@ -148,6 +148,8 @@ void collect_data_for_inference() {
       adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
       adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
       printVoltages(TOTAL_IC, &IC[0], Cell, sensor_values);
+
+      wait_us(1000000);  // One second delay
       
       adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
       adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
