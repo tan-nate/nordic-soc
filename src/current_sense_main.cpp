@@ -126,7 +126,7 @@ float HallEffectSensor() {
     current = voltage_diff_mV / HALL_SENSITIVITY;
 
     // Print the current reading
-    // printf("Current: %.3f A\n", current);
+    printf("Current: %f A\n", current);
 
     // Update the EKF input with the measured current
     // BatterySOCEstimation_rev_U.In1 = current;
