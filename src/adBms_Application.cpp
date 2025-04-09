@@ -74,10 +74,6 @@ LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED 
 float simulated_voltage = 4.2f;      // Starting voltage (Volts)
 float simulated_current = -1.0f;     // Starting current (Amperes, negative for discharging)
 float simulated_temperature = 22.0f; // Constant temperature (°C)
-// You can use constant placeholders for these if you don’t want to simulate changes:
-float simulated_ah = 2.0f;           // Placeholder for ampere-hours (Ah)
-float simulated_power = 5.0f;        // Placeholder for power (Watts)
-float simulated_brand = 1.0f;        // Arbitrary placeholder
 
 // Revised simulate_sensor_readings() function:
 // This function updates the passed array (sensor_values) with simulated data,
@@ -104,16 +100,10 @@ void simulate_sensor_readings(float *sensor_values) {
   // The expected order is:
   // Index 0: Voltage
   // Index 1: Current
-  // Index 2: Ampere-hours (Ah)
-  // Index 3: Power
-  // Index 4: Battery temperature
-  // Index 5: Brand
+  // Index 2: Battery temperature
   sensor_values[0] = simulated_voltage;
   sensor_values[1] = simulated_current;
-  sensor_values[2] = simulated_ah;
-  sensor_values[3] = simulated_power;
-  sensor_values[4] = simulated_temperature;
-  sensor_values[5] = simulated_brand;
+  sensor_values[2] = simulated_temperature;
 }
 
 // Edge Impulse ML
@@ -152,21 +142,21 @@ void collect_data_for_inference() {
 
       // If you are simulating sensor readings instead of using the real hardware,
       // call simulate_sensor_readings() to fill sensor_values.
-      simulate_sensor_readings(sensor_values);
+      // simulate_sensor_readings(sensor_values);
 
       // If you are combining simulated readings with real hardware reads,
       // you could also call your sensor read functions (e.g., read cell voltages,
       // AUX, current_sense_main, etc.) that update sensor_values.
       // For example:
-      // adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-      // adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-      // printVoltages(TOTAL_IC, &IC[0], Cell, sensor_values);
-      //
-      // adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
-      // adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-      // printVoltages(TOTAL_IC, &IC[0], Aux, sensor_values);
-      //
-      // current_sense_main(sensor_values);
+      adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+      adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
+      printVoltages(TOTAL_IC, &IC[0], Cell, sensor_values);
+      
+      adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
+      adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
+      printVoltages(TOTAL_IC, &IC[0], Aux, sensor_values);
+      
+      current_sense_main(sensor_values);
 
       // Now copy this sample into the global raw_data_buffer.
       // The offset is sample_idx * NUM_AXES.
