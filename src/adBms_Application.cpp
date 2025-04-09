@@ -111,9 +111,9 @@ void simulate_sensor_readings()
     if (simulated_voltage < 2.5) simulated_voltage = 2.5;
 
     // Assign simulated values to the ML model inputs
-    BatterySOCEstimation_rev_U.In1 = simulated_current;
-    BatterySOCEstimation_rev_U.In2 = simulated_voltage;
-    BatterySOCEstimation_rev_U.In3 = simulated_temperature;
+    // BatterySOCEstimation_rev_U.In1 = simulated_current;
+    // BatterySOCEstimation_rev_U.In2 = simulated_voltage;
+    // BatterySOCEstimation_rev_U.In3 = simulated_temperature;
 }
 
 void run_command(int cmd)
