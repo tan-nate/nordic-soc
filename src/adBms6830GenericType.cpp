@@ -729,9 +729,12 @@ uint32_t adBmsPollAdc(uint8_t tx_cmd[2])
   startTimer();
   adBmsCsLow();
   spiWriteBytes(4, &cmd[0]);
-  do{
-    spiReadBytes(1, &read_data);
-  }while(!(read_data == SDO_Line));
+  int attempts = 0;
+  do {
+      spiReadBytes(1, &read_data);
+      printf("  [PLADC Response Attempt %d] Received: 0x%02X\n", attempts++, read_data);
+      wait_us(500);  // short delay between attempts
+  } while (read_data != SDO_Line && attempts < 50);
   adBmsCsHigh();
   conv_count = getTimCount();
   stopTimer();

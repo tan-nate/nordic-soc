@@ -8,6 +8,8 @@ using namespace std::chrono;
 AnalogIn sensorPinA0(A0);
 AnalogIn sensorPinA1(A1);  // Sensor reference (Uref)
 AnalogIn sensorPinA2(A2);  // Sensor output (Uout)
+
+// Comment out to test SPI
 BufferedSerial pc(USBTX, USBRX, 9600);
 
 // *******************************************************************
