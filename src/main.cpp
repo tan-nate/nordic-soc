@@ -10,9 +10,9 @@ and its licensor.
 
 /*
 https://os.mbed.com/platforms/SDP_K1/
-Mbed SDP-K1 board MOSI, MOSI, SCK definition.
+Mbed SDP-K1 board MOSI, MISO, SCK definition.
 Arduino Header Pinout
-MOSI = D11`
+MOSI = D11
 MISO = D12
 SCK  = D13
 CSB =  D10
