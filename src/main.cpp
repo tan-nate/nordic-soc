@@ -19,7 +19,7 @@ CSB =  D10
 */
 
 // Set up UART: RX from nRF52 TX (use correct pins for your board)
-UnbufferedSerial uart(P0_8, P0_6, 9600); // RX, TX, baud
+UnbufferedSerial uart_rx(P0_8, P0_6, 9600); // RX, TX, baud
 
 char rx_buffer[64];
 int index = 0;
@@ -27,21 +27,21 @@ int index = 0;
 int main(void);
 void spi_init(void);
 
-DigitalOut chip_select(D10);    // SPI chip select
-DigitalOut mosi(D11);           // MOSI
-DigitalIn  miso(D12);           // MISO
-DigitalOut sclk(D13);           // SCK
-SPI spi(D11, D12, D13);         // SPI MOSI, MISO, SCK
-Timer timer;
+// DigitalOut chip_select(D10);    // SPI chip select
+// DigitalOut mosi(D11);           // MOSI
+// DigitalIn  miso(D12);           // MISO
+// DigitalOut sclk(D13);           // SCK
+// SPI spi(D11, D12, D13);         // SPI MOSI, MISO, SCK
+// Timer timer;
 
 int main()
 {
     printf("Waiting for UART messages from nRF52...\n");
 
     while (true) {
-        if (uart.readable()) {
+        if (uart_rx.readable()) {
             char c;
-            if (uart.read(&c, 1)) {
+            if (uart_rx.read(&c, 1)) {
                 if (c == '\n' || index >= sizeof(rx_buffer) - 1) {
                     rx_buffer[index] = '\0';  // Null-terminate
                     printf("Received: %s\n", rx_buffer);
@@ -65,9 +65,9 @@ int main()
     // return 0;
 }
 
-void spi_init()
-{   
-    chip_select = 1;
-    spi.format(8, 0);            // 8-bit data, CPOL=0, CPHA=0
-    spi.frequency(2000000);        // SPI clock 2MHz
-}
+// void spi_init()
+// {   
+//     chip_select = 1;
+//     spi.format(8, 0);            // 8-bit data, CPOL=0, CPHA=0
+//     spi.frequency(2000000);        // SPI clock 2MHz
+// }
