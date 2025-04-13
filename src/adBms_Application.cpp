@@ -145,6 +145,8 @@ void run_command(int cmd)
   {  
     // Simulate sensor readings
     simulate_sensor_readings();
+    printf("Voltage: %.2f V, Current: %.2f A, Temperature: %.2f °C\n", 
+      simulated_voltage, simulated_current, simulated_temperature);
     uart_send(simulated_voltage, simulated_current, simulated_temperature);
     ThisThread::sleep_for(100ms);  // 10Hz
 
