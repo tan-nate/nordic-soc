@@ -22,7 +22,7 @@ CSB =  D10
 UnbufferedSerial uart_rx(P0_8, P0_6, 9600); // RX, TX, baud
 
 char rx_buffer[64];
-int index = 0;
+int rx_index = 0;
 
 int main(void);
 void spi_init(void);
@@ -42,12 +42,12 @@ int main()
         if (uart_rx.readable()) {
             char c;
             if (uart_rx.read(&c, 1)) {
-                if (c == '\n' || index >= sizeof(rx_buffer) - 1) {
-                    rx_buffer[index] = '\0';  // Null-terminate
+                if (c == '\n' || rx_index >= sizeof(rx_buffer) - 1) {
+                    rx_buffer[rx_index] = '\0';  // Null-terminate
                     printf("Received: %s\n", rx_buffer);
-                    index = 0;  // Reset for next message
+                    rx_index = 0;  // Reset for next message
                 } else {
-                    rx_buffer[index++] = c;
+                    rx_buffer[rx_index++] = c;
                 }
             }
         }
