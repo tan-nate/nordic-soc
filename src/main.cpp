@@ -18,6 +18,12 @@ SCK  = D13
 CSB =  D10
 */
 
+// Set up UART: RX from nRF52 TX (use correct pins for your board)
+UnbufferedSerial uart_rx(D0, D1, 9600);  // RX = D0, TX = D1, but we only care about RX here
+
+char rx_buffer[64];
+int index = 0;
+
 int main(void);
 void spi_init(void);
 
@@ -30,14 +36,33 @@ Timer timer;
 
 int main()
 {
-    wait_us(1000000);
-    printf("Initialization Check.\n");
-    wait_us(1000000);
+    printf("Waiting for UART messages from nRF52...\n");
 
-    spi_init();
-    adbms_main();
+    while (true) {
+        if (uart_rx.readable()) {
+            char c;
+            if (uart_rx.read(&c, 1)) {
+                if (c == '\n' || index >= sizeof(rx_buffer) - 1) {
+                    rx_buffer[index] = '\0';  // Null-terminate
+                    printf("Received: %s\n", rx_buffer);
+                    index = 0;  // Reset for next message
+                } else {
+                    rx_buffer[index++] = c;
+                }
+            }
+        }
 
-    return 0;
+        ThisThread::sleep_for(10ms);  // Don't hammer the CPU
+    }
+
+    // wait_us(1000000);
+    // printf("Initialization Check.\n");
+    // wait_us(1000000);
+
+    // spi_init();
+    // adbms_main();
+
+    // return 0;
 }
 
 void spi_init()
