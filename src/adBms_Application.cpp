@@ -25,6 +25,9 @@ and its licensor.
 
 #include "current_sense_main.h"
 
+#include "mbed.h"
+
+
 /**
 *******************************************************************************
 * @brief Setup Variables
@@ -64,6 +67,15 @@ LOOP_MEASURMENT MEASURE_S_VOLTAGE       = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_AUX             = DISABLED;       /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
+
+// UART 
+UnbufferedSerial uart_tx(D1, D0, 9600);  // TX pin
+
+void uart_send(float voltage, float current, float temp) {
+  char buffer[64];
+  int len = snprintf(buffer, sizeof(buffer), "%.2f,%.2f,%.2f\n", voltage, current, temp);
+  uart_tx.write(buffer, len);
+}
 
 // SET BAUD RATE TO 9600
 void app_main()
@@ -131,8 +143,10 @@ void run_command(int cmd)
 
     case 3: 
   {  
-    // // Simulate sensor readings
-    // simulate_sensor_readings();
+    // Simulate sensor readings
+    simulate_sensor_readings();
+    uart_send(simulated_voltage, simulated_current, simulated_temperature);
+    ThisThread::sleep_for(100ms);  // 10Hz
 
     // // Run the ML model step update
     // BatterySOCEstimation_rev_step();
@@ -145,20 +159,20 @@ void run_command(int cmd)
     //     BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor // Estimated SoC
     // );
 
-    // break;
+    break;
     
-    // Start and read cell voltages
-    adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-    adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
+    // // Start and read cell voltages
+    // adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+    // adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
 
-    wait_us(1000000);  // One second delay
+    // wait_us(1000000);  // One second delay
 
-    // Start and read aux (temperature) voltages
-    adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
-    adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
+    // // Start and read aux (temperature) voltages
+    // adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
+    // adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
 
-    // Invoke current sense functionality
-    current_sense_main();
+    // // Invoke current sense functionality
+    // current_sense_main();
 
     // New CSV-formatted output:
     // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
