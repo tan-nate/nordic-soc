@@ -5,7 +5,6 @@
 using namespace std::chrono;
 
 // Define the analog pins (adjust if needed)
-AnalogIn sensorPinA0(A0);
 AnalogIn sensorPinA1(A1);  // Sensor reference (Uref)
 AnalogIn sensorPinA2(A2);  // Sensor output (Uout)
 BufferedSerial pc(USBTX, USBRX, 9600);

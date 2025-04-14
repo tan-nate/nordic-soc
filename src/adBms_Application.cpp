@@ -101,7 +101,7 @@ LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
 // UART 
-BufferedSerial uart(D6, D7);  // TX, RX, Baudrate
+BufferedSerial uart(A0, D7);  // TX, RX, Baudrate
 
 void uart_send(float voltage, float current, float temp) {
   char buffer[64];
