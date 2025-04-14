@@ -54,6 +54,10 @@ int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
     return 0;
 }
 
+// Replace with actual values from stats
+float mean[3] = { 3.66729629, -0.77352798, 8.94461763 };
+float std[3]  = { 0.30899151, 1.81825831, 13.95914506 };
+
 // Read and parse incoming UART sensor data line-by-line
 void uart_fill_buffer_from_serial(BufferedSerial &uart) {
     sample_idx = 0;  // Reset buffer index
@@ -68,9 +72,9 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
                     float voltage, current, temp;
                     if (sscanf(rx_line, "%f,%f,%f", &voltage, &current, &temp) == 3) {
                         int offset = sample_idx * NUM_AXES;
-                        raw_data_buffer[offset + 0] = voltage;
-                        raw_data_buffer[offset + 1] = current;
-                        raw_data_buffer[offset + 2] = temp;
+                        raw_data_buffer[offset + 0] = (voltage - mean[0]) / (std[0] + 1e-6);
+                        raw_data_buffer[offset + 1] = (current - mean[1]) / (std[1] + 1e-6);
+                        raw_data_buffer[offset + 2] = (temp    - mean[2]) / (std[2]  + 1e-6);
         
                         if (sample_idx % 50 == 0) {
                             printf("Sample %d: V=%.2f, I=%.2f, T=%.2f\n", sample_idx, voltage, current, temp);
@@ -106,8 +110,8 @@ void run_inference() {
         uart_fill_buffer_from_serial(uart);
 
         // 🟡 DEBUG: Print first sample in raw_data_buffer
-        printf("First input: %.2f, %.2f, %.2f\n",
-            raw_data_buffer[0], raw_data_buffer[1], raw_data_buffer[2]);
+        printf("   Normalized: %.3f, %.3f, %.3f\n",
+            raw_data_buffer[0], raw_data_buffer[1], raw_data_buffer[2]);        
 
         signal_t signal;
         signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
