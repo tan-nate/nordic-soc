@@ -105,6 +105,10 @@ void run_inference() {
         printf("📡 Collecting sensor window via UART...\n");
         uart_fill_buffer_from_serial(uart);
 
+        // 🟡 DEBUG: Print first sample in raw_data_buffer
+        printf("First input: %.2f, %.2f, %.2f\n",
+            raw_data_buffer[0], raw_data_buffer[1], raw_data_buffer[2]);
+
         signal_t signal;
         signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
         signal.get_data = &raw_feature_get_data;
@@ -116,7 +120,7 @@ void run_inference() {
         }
 
         printf("✅ Inference results:\n");
-        printf("   Regression output: %.5f\n", result.regression.value);
+        printf("   Regression output: %.5f\n", result.classification[0].value);
 
     #if EI_CLASSIFIER_HAS_ANOMALY == 1
         printf("   anomaly: %.3f\n", result.anomaly);
