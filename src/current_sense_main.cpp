@@ -50,7 +50,6 @@ void current_sense_main() {
     // Start the timer on first call
     if (currentSenseTimer.elapsed_time().count() == 0) {
         currentSenseTimer.start();
-        printf("10A Current Shunt Sensor\n");
     }
     
     // Use Mbed’s chrono-based clock instead of the deprecated get_ms_count()

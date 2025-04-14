@@ -196,7 +196,9 @@ void run_command(int cmd)
     current_sense_main();
 
     // send the readings over UART
+    // printf("📤 Sending over UART -> Voltage: %.3f V | Current: %.3f A | Temp: %.2f °C\n", VOLTAGE_SEND, CURRENT_SEND, TEMPERATURE_SEND);
     uart_send(VOLTAGE_SEND, CURRENT_SEND, TEMPERATURE_SEND);
+    uart.sync();  // <-- Flush the write buffer
 
     // To log results, run in PlatformIO shell:
     // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file

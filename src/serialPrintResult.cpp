@@ -329,7 +329,6 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       }
       else{ printf("Wrong Register Group Select\n"); }
     }
-    printf("\n\n");
   }
 }
 
