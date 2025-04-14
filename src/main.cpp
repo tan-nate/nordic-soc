@@ -42,7 +42,7 @@
 #define SLEEP_TIME_MS        (1000 / SAMPLE_FREQUENCY_HZ)
 
 // UART pins (connected to TX from nRF52DK)
-BufferedSerial uart(D6, D7); // TX, RX
+BufferedSerial uart(A0, D7); // TX, RX
 float raw_data_buffer[TOTAL_SAMPLES] = {};  // Global inference buffer
 char rx_line[64] = {};
 int sample_idx = 0;
@@ -56,7 +56,7 @@ int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
 
 // Replace with actual values from stats
 float mean[3] = { 3.66729629, -0.77352798, 8.94461763 };
-float std[3]  = { 0.30899151, 1.81825831, 13.95914506 };
+float stddev[3]  = { 0.30899151, 1.81825831, 13.95914506 };
 
 // Read and parse incoming UART sensor data line-by-line
 void uart_fill_buffer_from_serial(BufferedSerial &uart) {
@@ -72,9 +72,9 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
                     float voltage, current, temp;
                     if (sscanf(rx_line, "%f,%f,%f", &voltage, &current, &temp) == 3) {
                         int offset = sample_idx * NUM_AXES;
-                        raw_data_buffer[offset + 0] = (voltage - mean[0]) / (std[0] + 1e-6);
-                        raw_data_buffer[offset + 1] = (current - mean[1]) / (std[1] + 1e-6);
-                        raw_data_buffer[offset + 2] = (temp    - mean[2]) / (std[2]  + 1e-6);
+                        raw_data_buffer[offset + 0] = (voltage - mean[0]) / (stddev[0] + 1e-6);
+                        raw_data_buffer[offset + 1] = (current - mean[1]) / (stddev[1] + 1e-6);
+                        raw_data_buffer[offset + 2] = (temp    - mean[2]) / (stddev[2]  + 1e-6);
         
                         if (sample_idx % 50 == 0) {
                             printf("Sample %d: V=%.2f, I=%.2f, T=%.2f\n", sample_idx, voltage, current, temp);
@@ -85,7 +85,7 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
         
                     rx_index = 0;
                 }
-                else if (rx_index < sizeof(rx_line) - 1) {
+                else if (rx_index < (int)(sizeof(rx_line) - 1)) {
                     rx_line[rx_index++] = c;
                 }
                 else {
