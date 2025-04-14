@@ -24,6 +24,7 @@ and its licensor.
 #include "mcuWrapper.h"
 
 #include "current_sense_main.h"
+#include "globals.h"
 
 // minimal working uart
 // BufferedSerial uart(D6, D7);  // TX, RX
@@ -172,36 +173,37 @@ void run_command(int cmd)
 
   case 3: 
   {  
-    // Simulate sensor readings
-    simulate_sensor_readings();
-    // printf("Sending over UART -> V: %.2f V, I: %.2f A, T: %.2f °C\n", 
-    //   simulated_voltage, simulated_current, simulated_temperature);
-    uart_send(simulated_voltage, simulated_current, simulated_temperature);
-    uart.sync();  // <-- Flush the write buffer
-    ThisThread::sleep_for(100ms);  // 10Hz
-
-    break;
-    
-    // // Start and read cell voltages
-
-    // adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-    // adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-
-    // // Start and read aux (temperature) voltages
-    // adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
-    // adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-
-    // // Invoke current sense functionality
-    // current_sense_main();
-
-    // New CSV-formatted output:
-    // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
-    // To log results, run in PlatformIO shell:
-    // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
-
+    // // Simulate sensor readings
+    // simulate_sensor_readings();
+    // // printf("Sending over UART -> V: %.2f V, I: %.2f A, T: %.2f °C\n", 
+    // //   simulated_voltage, simulated_current, simulated_temperature);
+    // uart_send(simulated_voltage, simulated_current, simulated_temperature);
+    // uart.sync();  // <-- Flush the write buffer
     // ThisThread::sleep_for(100ms);  // 10Hz
 
     // break;
+    
+    // // Start and read cell voltages in real life
+
+    adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
+    adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
+
+    // Start and read aux (temperature) voltages
+    adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
+    adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
+
+    // Invoke current sense functionality
+    current_sense_main();
+
+    // send the readings over UART
+    uart_send(VOLTAGE_SEND, CURRENT_SEND, TEMPERATURE_SEND);
+
+    // To log results, run in PlatformIO shell:
+    // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
+
+    ThisThread::sleep_for(100ms);  // 10Hz
+
+    break;
   }
 
   case 4:

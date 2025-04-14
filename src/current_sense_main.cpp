@@ -1,4 +1,5 @@
 #include "common.h"
+#include "globals.h"
 #include <algorithm>
 #include <chrono>
 
@@ -12,6 +13,9 @@ BufferedSerial pc(USBTX, USBRX, 9600);
 // *******************************************************************
 // Sensor and ADC configuration for LEM HLSR 10-P
 // *******************************************************************
+
+float CURRENT_SEND = 0.0f;
+
 // The sensor’s sensitivity is 80 mV/A.
 // The board’s ADC actually returns a 16‐bit value, but if your ADC is effectively 10‐bit,
 // you can shift right by 6 bits (16 - 6 = 10). Then, with a 3 V (3000 mV) reference,
@@ -124,8 +128,10 @@ float HallEffectSensor() {
     // Calculate the current in amperes (mV divided by mV/A)
     current = voltage_diff_mV / HALL_SENSITIVITY;
 
+    CURRENT_SEND = current;
+
     // Print the current reading
-    // printf("Current: %.3f A\n", current);
+    // printf("Current: %.3f A\n", CURRENT_SEND);
 
     // Update the EKF input with the measured current
     // BatterySOCEstimation_rev_U.In1 = current;

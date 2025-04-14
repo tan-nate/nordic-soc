@@ -18,6 +18,10 @@ and its licensor.
 */
 #include "common.h"
 #include "serialPrintResult.h"
+#include "globals.h"
+
+float VOLTAGE_SEND = 0.0f;  // Define and initialize it here
+float TEMPERATURE_SEND = 0.0f;
 
 #ifdef MBED
 /**
@@ -255,7 +259,8 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
       if(type == Cell)
       {
         // printf("C%d=%fV,",(index+1), voltage);
-        printf("voltage: %f V \n", voltage);
+        VOLTAGE_SEND = voltage;
+        // printf("voltage: %f V \n", VOLTAGE_SEND);
         // BatterySOCEstimation_rev_U.In2 = voltage;    // assign cell voltage to ekf input
         /*if(index == (channel-1))  // CHANGE THIS BACK
         {
@@ -296,7 +301,8 @@ void printVoltages(uint8_t tIC, cell_asic *IC, TYPE type)
         temperature = convertVoltageToTemp(voltage);
         if(index == 0) 
         {
-          printf("temp: %f\n", temperature);
+          TEMPERATURE_SEND = temperature;
+          // printf("temp: %f\n", TEMPERATURE_SEND);
           // BatterySOCEstimation_rev_U.In3 = temperature; // assign temperature to ekf input for aux1 only
           // printf("V_aux%d=%f V,",(index+1), voltage);
           // printf("T_aux%d=%f Celsius,",(index+1), temperature);
