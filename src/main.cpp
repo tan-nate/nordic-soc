@@ -27,7 +27,6 @@ DigitalOut sclk(D13);                       /* SCK */
 SPI spi(D11, D12, D13);                     /* SPI MOSI, MISO, SCK */
 Timer timer;
 
-
 int main()
 {
     wait_us(1000000);
@@ -39,30 +38,6 @@ int main()
 
     return 0;
 }
-
-// int main() {
-//     ThisThread::sleep_for(1s);  // Let USB serial settle
-//     printf("=== SPI Basic Line Check ===\n");
-
-//     // Setup SPI: 8-bit, Mode 0, 2 MHz
-//     spi.format(8, 0);           
-//     spi.frequency(2000000);     
-
-//     chip_select = 1;
-//     ThisThread::sleep_for(5ms); // Ensure idle CS before start
-
-//     chip_select = 0;
-//     wait_us(5);                 // CS settle before SPI
-//     uint8_t received = spi.write(0xAA);  // Send dummy byte
-//     wait_us(5);
-//     chip_select = 1;
-
-//     printf("Sent: 0x%02X, Received: 0x%02X\n", 0xAA, received);
-
-//     while (true) {
-//         ThisThread::sleep_for(1s);
-//     }
-// }
 
 void spi_init()
 {   

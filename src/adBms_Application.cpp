@@ -25,9 +25,6 @@ and its licensor.
 
 #include "current_sense_main.h"
 
-#include "mbed.h"
-
-
 /**
 *******************************************************************************
 * @brief Setup Variables
@@ -69,17 +66,19 @@ LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED 
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
 // UART 
-UnbufferedSerial uart_tx(P0_6, P0_8, 9600);  // TX, RX, Baudrate
+BufferedSerial uart(D6, D7);  // TX, RX, Baudrate
 
 void uart_send(float voltage, float current, float temp) {
   char buffer[64];
   int len = snprintf(buffer, sizeof(buffer), "%.2f,%.2f,%.2f\n", voltage, current, temp);
-  uart_tx.write(buffer, len);
+  uart.write(buffer, len);
 }
 
 // SET BAUD RATE TO 9600
 void app_main()
 {    
+  uart.set_baud(9600);
+
 //  printMenu();
   adBms6830_init_config(TOTAL_IC, &IC[0]);
 
@@ -121,11 +120,6 @@ void simulate_sensor_readings()
     // Prevent voltage from exceeding 4.2V or dropping below 2.5V
     if (simulated_voltage > 4.2) simulated_voltage = 4.2;
     if (simulated_voltage < 2.5) simulated_voltage = 2.5;
-
-    // Assign simulated values to the ML model inputs
-    // BatterySOCEstimation_rev_U.In1 = simulated_current;
-    // BatterySOCEstimation_rev_U.In2 = simulated_voltage;
-    // BatterySOCEstimation_rev_U.In3 = simulated_temperature;
 }
 
 void run_command(int cmd)
@@ -141,33 +135,19 @@ void run_command(int cmd)
     adBms6830_read_config(TOTAL_IC, &IC[0]);
     break;
 
-    case 3: 
+  case 3: 
   {  
     // Simulate sensor readings
     simulate_sensor_readings();
-    printf("Voltage: %.2f V, Current: %.2f A, Temperature: %.2f °C\n", 
-      simulated_voltage, simulated_current, simulated_temperature);
     uart_send(simulated_voltage, simulated_current, simulated_temperature);
     ThisThread::sleep_for(100ms);  // 10Hz
-
-    // // Run the ML model step update
-    // BatterySOCEstimation_rev_step();
-
-    // // Print simulated inputs and ML-predicted SoC
-    // printf("%f, %f, %f, %f\n", 
-    //     BatterySOCEstimation_rev_U.In1,  // Simulated current
-    //     BatterySOCEstimation_rev_U.In2,  // Simulated voltage
-    //     BatterySOCEstimation_rev_U.In3,  // Simulated temperature
-    //     BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor // Estimated SoC
-    // );
 
     break;
     
     // // Start and read cell voltages
+
     // adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     // adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-
-    // wait_us(1000000);  // One second delay
 
     // // Start and read aux (temperature) voltages
     // adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]); // GPIO Temp Reading
@@ -181,13 +161,8 @@ void run_command(int cmd)
     // To log results, run in PlatformIO shell:
     // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
 
-    // Replace EKF inputs with ML:
+    // ThisThread::sleep_for(100ms);  // 10Hz
 
-    // printf("%f, %f, %f, %f\n", 
-    //   BatterySOCEstimation_rev_U.In1, 
-    //   BatterySOCEstimation_rev_U.In2, 
-    //   BatterySOCEstimation_rev_U.In3, 
-    //   BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor);
     // break;
   }
 
