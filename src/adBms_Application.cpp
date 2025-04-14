@@ -16,8 +16,6 @@ and its licensor.
 /*! @addtogroup Application
 *  @{
 */
-// Edge Impulse
-#include "edge-impulse-sdk/classifier/ei_run_classifier.h"
 
 #include "common.h"
 #include "adBms_Application.h"
@@ -25,7 +23,6 @@ and its licensor.
 #include "adBms6830GenericType.h"
 #include "serialPrintResult.h"
 #include "mcuWrapper.h"
-#include "edge_impulse_data.h"
 
 #include "current_sense_main.h"
 
@@ -69,124 +66,9 @@ LOOP_MEASURMENT MEASURE_AUX             = DISABLED;       /*   This is ENABLED o
 LOOP_MEASURMENT MEASURE_RAUX            = DISABLED;        /*   This is ENABLED or DISABLED       */
 LOOP_MEASURMENT MEASURE_STAT            = DISABLED;        /*   This is ENABLED or DISABLED       */
 
-// SIMULATE SENSORS
-// Global simulation variables
-float simulated_voltage = 4.2f;      // Starting voltage (Volts)
-float simulated_current = -1.0f;     // Starting current (Amperes, negative for discharging)
-float simulated_temperature = 22.0f; // Constant temperature (°C)
-
-// Revised simulate_sensor_readings() function:
-// This function updates the passed array (sensor_values) with simulated data,
-// following the order required by the ML model.
-void simulate_sensor_readings(float *sensor_values) {
-  // Update simulated voltage based on current (a simple integration step)
-  simulated_voltage += simulated_current * 0.01f; // Adjust step size as needed
-
-  // Reverse current direction when voltage boundaries are reached
-  if (simulated_voltage <= 2.5f) {
-      simulated_current = 1.0f;  // Now charging
-  } else if (simulated_voltage >= 4.2f) {
-      simulated_current = -1.0f; // Now discharging
-  }
-
-  // Clamp voltage to the allowed range
-  if (simulated_voltage > 4.2f) simulated_voltage = 4.2f;
-  if (simulated_voltage < 2.5f) simulated_voltage = 2.5f;
-
-  // (Optional) Update simulated_ah and simulated_power here if you wish.
-  // For simplicity, we'll leave them constant.
-
-  // Fill the sensor_values array with simulated data
-  // The expected order is:
-  // Index 0: Voltage
-  // Index 1: Current
-  // Index 2: Battery temperature
-  sensor_values[0] = simulated_voltage;
-  sensor_values[1] = simulated_current;
-  sensor_values[2] = simulated_temperature;
-}
-
-// Edge Impulse ML
-
-// From your model_metadata.h
-#define SAMPLE_COUNT        500            // EI_CLASSIFIER_RAW_SAMPLE_COUNT
-#define NUM_AXES            3             // EI_CLASSIFIER_RAW_SAMPLES_PER_FRAME
-
-// Based on dominant Δt ≈ 0.1s in training data (HPPC + CC), we use 10 Hz sampling
-// hard code into EI_CLASSIFIER_FREQUENCY in model_metadata.h accordingly
-#define SAMPLE_FREQUENCY_HZ 10.0f   // EI_CLASSIFIER_FREQUENCY
-
-// Derived values
-#define TOTAL_SAMPLES       (SAMPLE_COUNT * NUM_AXES)
-#define SLEEP_TIME_MS       (1000 / SAMPLE_FREQUENCY_HZ)
-
-// 1) Create a global buffer that the classifier will read from.
-//    This must match EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE.
-//    also update this in edge_impulse_data.h
-float raw_data_buffer[1500] = {};
-
-// 2) The classifier calls this function to get data
-int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
-    memcpy(out_ptr, raw_data_buffer + offset, length * sizeof(float));
-    return 0;
-}
-
-// Collect one full inference window  
-void collect_data_for_inference() {
-  // We want SAMPLE_COUNT samples, each with NUM_AXES floats,
-  // so that raw_data_buffer[] ends up with SAMPLE_COUNT * NUM_AXES floats.
-  for (int sample_idx = 0; sample_idx < SAMPLE_COUNT; sample_idx++) {
-      // Create a local array to hold one sample reading.
-      float sensor_values[NUM_AXES] = {0};
-
-      // If you are simulating sensor readings instead of using the real hardware,
-      // call simulate_sensor_readings() to fill sensor_values.
-      // simulate_sensor_readings(sensor_values);
-
-      // real sensor readings:
-
-      adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
-      adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
-      printVoltages(TOTAL_IC, &IC[0], Cell, sensor_values);
-
-      wait_us(1000000);  // One second delay
-      
-      adBms6830_start_aux_voltage_measurment(TOTAL_IC, &IC[0]);
-      adBms6830_read_aux_voltages(TOTAL_IC, &IC[0]);
-      printVoltages(TOTAL_IC, &IC[0], Aux, sensor_values);
-      
-      current_sense_main(sensor_values);
-
-      // Now copy this sample into the global raw_data_buffer.
-      // The offset is sample_idx * NUM_AXES.
-      for (int j = 0; j < NUM_AXES; j++) {
-          raw_data_buffer[sample_idx * NUM_AXES + j] = sensor_values[j];
-      }
-
-      if (sample_idx % 50 == 0) {
-        printf("   Collected %d of %d samples...\n", sample_idx, SAMPLE_COUNT);
-      }
-
-      if (sample_idx % 100 == 0) {
-        printf("Sample %d: V=%.3f, I=%.3f, T=%.2f\n", sample_idx,
-          sensor_values[0], sensor_values[1], sensor_values[2]);
-      }
-
-      // Wait for ~97 ms to maintain the sampling frequency (~10.31 Hz)
-      ThisThread::sleep_for((int)SLEEP_TIME_MS);
-  }
-  // At this point, raw_data_buffer[] holds a full window (60 floats) for inference.
-}
-
-// We'll store classification results here
-ei_impulse_result_t result;
-
 void app_main()
 {    
   //  printMenu();
-  printf("=== Edge Impulse: Integrating real sensor data ===\n");
-  printf("Expecting %d samples, each with %d axes (total %d floats), at %.2f Hz.\n",
-        SAMPLE_COUNT, NUM_AXES, TOTAL_SAMPLES, (float)SAMPLE_FREQUENCY_HZ);
         
   adBms6830_init_config(TOTAL_IC, &IC[0]);
 
@@ -200,37 +82,6 @@ void app_main()
     //     scanf("%d", &user_command);
     //     printf("Enter cmd:%d\n", user_command);
     // #endif
-
-    // Edge Impulse ML
-    // Step A: Collect one window of data
-    collect_data_for_inference();
-
-    // Step B: Wrap the raw_data_buffer with a signal structure
-    signal_t signal;
-    signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
-    signal.get_data = &raw_feature_get_data;
-
-    // Step C: Run the classifier
-    EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);
-    if (res != EI_IMPULSE_OK) {
-        printf("run_classifier failed (%d)\n", res);
-        continue;
-    }
-
-    // Step D: Print classification
-    printf("Inference results:\n");
-    for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
-        printf("   %s: %.5f\n",
-               result.classification[ix].label,
-               result.classification[ix].value);
-    }
-
-    #if EI_CLASSIFIER_HAS_ANOMALY == 1
-        printf("   anomaly: %.3f\n", result.anomaly);
-    #endif
-
-    // Step E: Delay before running again
-    ThisThread::sleep_for(1000);
   }
 }
 
@@ -247,24 +98,8 @@ void run_command(int cmd)
     adBms6830_read_config(TOTAL_IC, &IC[0]);
     break;
 
-    case 3: 
+  case 3: 
   {  
-    // // Simulate sensor readings
-    // simulate_sensor_readings();
-
-    // // Run the ML model step update
-    // BatterySOCEstimation_rev_step();
-
-    // // Print simulated inputs and ML-predicted SoC
-    // printf("%f, %f, %f, %f\n", 
-    //     BatterySOCEstimation_rev_U.In1,  // Simulated current
-    //     BatterySOCEstimation_rev_U.In2,  // Simulated voltage
-    //     BatterySOCEstimation_rev_U.In3,  // Simulated temperature
-    //     BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor // Estimated SoC
-    // );
-
-    // break;
-    
     // Start and read cell voltages
     adBms6830_start_adc_cell_voltage_measurment(TOTAL_IC);
     adBms6830_read_cell_voltages(TOTAL_IC, &IC[0]);
@@ -282,14 +117,6 @@ void run_command(int cmd)
     // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
     // To log results, run in PlatformIO shell:
     // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
-
-    // Replace EKF inputs with ML:
-
-    // printf("%f, %f, %f, %f\n", 
-    //   BatterySOCEstimation_rev_U.In1, 
-    //   BatterySOCEstimation_rev_U.In2, 
-    //   BatterySOCEstimation_rev_U.In3, 
-    //   BatterySOCEstimation_rev_B.ImpAsg_InsertedFor_SOC_at_inpor);
     break;
   }
 
