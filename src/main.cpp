@@ -33,7 +33,7 @@ int main()
     printf("Initialization Check.\n");
     wait_us(1000000);
 
-    spi_init();
+    // spi_init();
     adbms_main();
 
     return 0;
