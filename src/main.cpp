@@ -76,9 +76,9 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
                         raw_data_buffer[offset + 1] = (current - mean[1]) / (stddev[1] + 1e-6);
                         raw_data_buffer[offset + 2] = (temp    - mean[2]) / (stddev[2]  + 1e-6);
         
-                        if (sample_idx % 50 == 0) {
-                            printf("Sample %d: V=%.2f, I=%.2f, T=%.2f\n", sample_idx, voltage, current, temp);
-                        }
+                        // if (sample_idx % 50 == 0) {
+                        //     printf("Sample %d: V=%.2f, I=%.2f, T=%.2f\n", sample_idx, voltage, current, temp);
+                        // }
         
                         sample_idx++;
                     }
@@ -101,17 +101,50 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
 ei_impulse_result_t result;
 
 void run_inference() {
-    printf("\n=== Edge Impulse: Real-Time Inference via UART ===\n");
-    printf("Expecting %d samples with %d axes (total %d values) at %.2f Hz\n\n",
-           SAMPLE_COUNT, NUM_AXES, TOTAL_SAMPLES, SAMPLE_FREQUENCY_HZ);
+    // printf("\n=== Edge Impulse: Real-Time Inference via UART ===\n");
+    // printf("Expecting %d samples with %d axes (total %d values) at %.2f Hz\n\n",
+    //        SAMPLE_COUNT, NUM_AXES, TOTAL_SAMPLES, SAMPLE_FREQUENCY_HZ);
+
+    // while (true) {
+    //     printf("📡 Collecting sensor window via UART...\n");
+    //     uart_fill_buffer_from_serial(uart);
+
+    //     // 🟡 DEBUG: Print first sample in raw_data_buffer
+    //     printf("   Normalized: %.3f, %.3f, %.3f\n",
+    //         raw_data_buffer[0], raw_data_buffer[1], raw_data_buffer[2]);        
+
+    //     signal_t signal;
+    //     signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
+    //     signal.get_data = &raw_feature_get_data;
+
+    //     EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);
+    //     if (res != EI_IMPULSE_OK) {
+    //         printf("⚠️  run_classifier failed (%d)\n", res);
+    //         continue;
+    //     }
+
+    //     printf("✅ Inference results:\n");
+    //     printf("   Regression output: %.5f\n", result.classification[0].value);
+
+    // #if EI_CLASSIFIER_HAS_ANOMALY == 1
+    //     printf("   anomaly: %.3f\n", result.anomaly);
+    // #endif
+
+    //     printf("\n⏳ Waiting before next inference...\n\n");
+    //     ThisThread::sleep_for(1000ms);  // Optional pause between inferences
+    // }
+
+    // cleaned up CSV version
+
+    printf("timestamp,voltage,current,battery_temp,predicted_soc\n");
 
     while (true) {
-        printf("📡 Collecting sensor window via UART...\n");
         uart_fill_buffer_from_serial(uart);
 
-        // 🟡 DEBUG: Print first sample in raw_data_buffer
-        printf("   Normalized: %.3f, %.3f, %.3f\n",
-            raw_data_buffer[0], raw_data_buffer[1], raw_data_buffer[2]);        
+        // Assume raw_data_buffer[0] = voltage, [1] = current, [2] = temp
+        float voltage = raw_data_buffer[0];
+        float current = raw_data_buffer[1];
+        float battery_temp = raw_data_buffer[2];
 
         signal_t signal;
         signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
@@ -119,19 +152,17 @@ void run_inference() {
 
         EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);
         if (res != EI_IMPULSE_OK) {
-            printf("⚠️  run_classifier failed (%d)\n", res);
-            continue;
+            continue;  // Skip this iteration if inference fails
         }
 
-        printf("✅ Inference results:\n");
-        printf("   Regression output: %.5f\n", result.classification[0].value);
+        float predicted_soc = result.classification[0].value;
 
-    #if EI_CLASSIFIER_HAS_ANOMALY == 1
-        printf("   anomaly: %.3f\n", result.anomaly);
-    #endif
+        // Print timestamp + data
+        uint64_t timestamp_ms = Kernel::get_ms_count();  // Or your platform's timestamp
+        printf("%llu,%.3f,%.3f,%.3f,%.5f\n",
+               timestamp_ms, voltage, current, battery_temp, predicted_soc);
 
-        printf("\n⏳ Waiting before next inference...\n\n");
-        ThisThread::sleep_for(1000ms);  // Optional pause between inferences
+        ThisThread::sleep_for(1000ms);  // Delay between samples
     }
 }
 
@@ -160,6 +191,6 @@ int main() {
     // }
 
     // real function:
-    printf("👋 Starting UART-to-ML Inference on nRF52840...\n");
+    // printf("👋 Starting UART-to-ML Inference on nRF52840...\n");
     run_inference();
 }

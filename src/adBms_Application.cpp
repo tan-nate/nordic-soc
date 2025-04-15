@@ -114,7 +114,7 @@ void run_command(int cmd)
     // current_sense_main();
 
     // New CSV-formatted output:
-    // Format: ekf_current_input, ekf_voltage_input, ekf_temp_input, ekf_soc
+    // Format: "timestamp,voltage,current,battery_temp,predicted_soc\n"
     // To log results, run in PlatformIO shell:
     // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
     break;
