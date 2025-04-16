@@ -55,8 +55,12 @@ int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
 }
 
 // Replace with actual values from stats
-float mean[3] = { 3.66729629, -0.77352798, 8.94461763 };
-float stddev[3]  = { 0.30899151, 1.81825831, 13.95914506 };
+float mean[3] = { 3.66746668, -0.04237708, 15.46597781 };
+float stddev[3] = { 0.38206392, 3.74553363, 11.89024301 };
+
+float last_voltage = 0.0f;
+float last_current = 0.0f;
+float last_temp = 0.0f;
 
 // Read and parse incoming UART sensor data line-by-line
 void uart_fill_buffer_from_serial(BufferedSerial &uart) {
@@ -76,9 +80,12 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
                         raw_data_buffer[offset + 1] = (current - mean[1]) / (stddev[1] + 1e-6);
                         raw_data_buffer[offset + 2] = (temp    - mean[2]) / (stddev[2]  + 1e-6);
         
-                        // if (sample_idx % 50 == 0) {
-                        //     printf("Sample %d: V=%.2f, I=%.2f, T=%.2f\n", sample_idx, voltage, current, temp);
-                        // }
+                    // 🆕 Store latest raw values
+                    if (sample_idx == 0) {
+                        last_voltage = voltage;
+                        last_current = current;
+                        last_temp = temp;
+                    }
         
                         sample_idx++;
                     }
@@ -99,6 +106,29 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
 
 // Inference results buffer
 ei_impulse_result_t result;
+
+void simulate_sensors() {
+    const float sim_voltage = 4.1f;
+    const float sim_current = 0.0f;
+    const float sim_temp    = 25.0f;
+
+    sample_idx = 0;
+
+    while (sample_idx < SAMPLE_COUNT) {
+        int offset = sample_idx * NUM_AXES;
+        raw_data_buffer[offset + 0] = (sim_voltage - mean[0]) / (stddev[0] + 1e-6);
+        raw_data_buffer[offset + 1] = (sim_current - mean[1]) / (stddev[1] + 1e-6);
+        raw_data_buffer[offset + 2] = (sim_temp    - mean[2]) / (stddev[2]  + 1e-6);
+
+        if (sample_idx == 0) {
+            last_voltage = sim_voltage;
+            last_current = sim_current;
+            last_temp    = sim_temp;
+        }
+
+        sample_idx++;
+    }
+}
 
 void run_inference() {
     // printf("\n=== Edge Impulse: Real-Time Inference via UART ===\n");
@@ -136,15 +166,11 @@ void run_inference() {
 
     // cleaned up CSV version
 
-    printf("timestamp,voltage,current,battery_temp,predicted_soc\n");
+    printf("voltage,current,battery_temp,predicted_soc\n");
 
     while (true) {
-        uart_fill_buffer_from_serial(uart);
-
-        // Assume raw_data_buffer[0] = voltage, [1] = current, [2] = temp
-        float voltage = raw_data_buffer[0];
-        float current = raw_data_buffer[1];
-        float battery_temp = raw_data_buffer[2];
+        // uart_fill_buffer_from_serial(uart);
+        simulate_sensors();
 
         signal_t signal;
         signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
@@ -158,11 +184,10 @@ void run_inference() {
         float predicted_soc = result.classification[0].value;
 
         // Print timestamp + data
-        uint64_t timestamp_ms = Kernel::get_ms_count();  // Or your platform's timestamp
-        printf("%llu,%.3f,%.3f,%.3f,%.5f\n",
-               timestamp_ms, voltage, current, battery_temp, predicted_soc);
+        printf("%.3f,%.3f,%.3f,%.5f\n",
+               last_voltage, last_current, last_temp, predicted_soc);
 
-        ThisThread::sleep_for(1000ms);  // Delay between samples
+        // ThisThread::sleep_for(1000ms);  // Delay between samples
     }
 }
 
