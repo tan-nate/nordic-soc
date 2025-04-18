@@ -107,65 +107,67 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
 // Inference results buffer
 ei_impulse_result_t result;
 
+// Simulation state
+float sim_voltage = 4.2f;
+float sim_current = -2.0f;
+int sample_phase = 0;
+int test_stage = 0;
+
 void simulate_sensors() {
-    const float sim_voltage = 4.1f;
-    const float sim_current = 0.0f;
-    const float sim_temp    = 25.0f;
+    const float temp = 25.0f;
+    const float voltage_step = 0.1f;
+    const float current_step = 0.1f;
+    const float v_max = 4.2f;
+    const float v_min = 2.5f;
+    const float i_max =  2.0f;
+    const float i_min = -2.0f;
 
     sample_idx = 0;
-
     while (sample_idx < SAMPLE_COUNT) {
         int offset = sample_idx * NUM_AXES;
         raw_data_buffer[offset + 0] = (sim_voltage - mean[0]) / (stddev[0] + 1e-6);
         raw_data_buffer[offset + 1] = (sim_current - mean[1]) / (stddev[1] + 1e-6);
-        raw_data_buffer[offset + 2] = (sim_temp    - mean[2]) / (stddev[2]  + 1e-6);
+        raw_data_buffer[offset + 2] = (temp - mean[2]) / (stddev[2] + 1e-6);
 
         if (sample_idx == 0) {
             last_voltage = sim_voltage;
             last_current = sim_current;
-            last_temp    = sim_temp;
+            last_temp = temp;
         }
 
         sample_idx++;
     }
+
+    sample_phase++;
+    if (test_stage == 0) {
+        sim_voltage -= voltage_step;
+        if (sim_voltage <= v_min) {
+            sim_voltage = v_min;
+            test_stage++;
+        }
+    } else if (test_stage == 1) {
+        sim_current += current_step;
+        if (sim_current >= -0.1f) {
+            sim_current = 2.0f;
+            test_stage++;
+        }
+    } else if (test_stage == 2) {
+        sim_voltage += voltage_step;
+        if (sim_voltage >= v_max) {
+            sim_voltage = v_max;
+            test_stage++;
+        }
+    } else if (test_stage == 3) {
+        sim_current -= current_step;
+        if (sim_current <= 0.1f) {
+            sim_current = 0.1f;
+            test_stage = 0;
+            sim_voltage = v_max;
+        }
+    }
 }
 
 void run_inference() {
-    // printf("\n=== Edge Impulse: Real-Time Inference via UART ===\n");
-    // printf("Expecting %d samples with %d axes (total %d values) at %.2f Hz\n\n",
-    //        SAMPLE_COUNT, NUM_AXES, TOTAL_SAMPLES, SAMPLE_FREQUENCY_HZ);
-
-    // while (true) {
-    //     printf("📡 Collecting sensor window via UART...\n");
-    //     uart_fill_buffer_from_serial(uart);
-
-    //     // 🟡 DEBUG: Print first sample in raw_data_buffer
-    //     printf("   Normalized: %.3f, %.3f, %.3f\n",
-    //         raw_data_buffer[0], raw_data_buffer[1], raw_data_buffer[2]);        
-
-    //     signal_t signal;
-    //     signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
-    //     signal.get_data = &raw_feature_get_data;
-
-    //     EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);
-    //     if (res != EI_IMPULSE_OK) {
-    //         printf("⚠️  run_classifier failed (%d)\n", res);
-    //         continue;
-    //     }
-
-    //     printf("✅ Inference results:\n");
-    //     printf("   Regression output: %.5f\n", result.classification[0].value);
-
-    // #if EI_CLASSIFIER_HAS_ANOMALY == 1
-    //     printf("   anomaly: %.3f\n", result.anomaly);
-    // #endif
-
-    //     printf("\n⏳ Waiting before next inference...\n\n");
-    //     ThisThread::sleep_for(1000ms);  // Optional pause between inferences
-    // }
-
-    // cleaned up CSV version
-
     printf("voltage,current,battery_temp,predicted_soc\n");
 
     while (true) {
@@ -215,7 +217,5 @@ int main() {
     //     }
     // }
 
-    // real function:
-    // printf("👋 Starting UART-to-ML Inference on nRF52840...\n");
     run_inference();
 }

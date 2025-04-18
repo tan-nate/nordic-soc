@@ -81,9 +81,9 @@
 #define EI_CLASSIFIER_DATATYPE_UINT8             3
 #define EI_CLASSIFIER_DATATYPE_INT8              9
 
-#define EI_CLASSIFIER_PROJECT_ID                 674650
+#define EI_CLASSIFIER_PROJECT_ID                 675177
 #define EI_CLASSIFIER_PROJECT_OWNER              "Nate Tan"
-#define EI_CLASSIFIER_PROJECT_NAME               "soc-estimator-v6-final"
+#define EI_CLASSIFIER_PROJECT_NAME               "v6-final-3"
 #define EI_CLASSIFIER_PROJECT_DEPLOY_VERSION     1
 #define EI_CLASSIFIER_NN_INPUT_FRAME_SIZE        1500
 #define EI_CLASSIFIER_RAW_SAMPLE_COUNT           1

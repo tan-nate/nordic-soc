@@ -116,10 +116,10 @@ const ei_object_detection_nms_config_t ei_object_detection_nms = {
     0.2f  /* NMS IOU threshold */
 };
 
-const ei_impulse_t impulse_674650_0 = {
-    .project_id = 674650,
+const ei_impulse_t impulse_675177_0 = {
+    .project_id = 675177,
     .project_owner = "Nate Tan",
-    .project_name = "soc-estimator-v6-final",
+    .project_name = "v6-final-3",
     .impulse_id = 1,
     .impulse_name = "Impulse #1",
     .deploy_version = 1,
@@ -163,7 +163,7 @@ const ei_impulse_t impulse_674650_0 = {
     .object_detection_nms = ei_object_detection_nms
 };
 
-ei_impulse_handle_t impulse_handle_674650_0 = ei_impulse_handle_t( &impulse_674650_0 );
-ei_impulse_handle_t& ei_default_impulse = impulse_handle_674650_0;
+ei_impulse_handle_t impulse_handle_675177_0 = ei_impulse_handle_t( &impulse_675177_0 );
+ei_impulse_handle_t& ei_default_impulse = impulse_handle_675177_0;
 
 #endif // _EI_CLASSIFIER_MODEL_VARIABLES_H_
