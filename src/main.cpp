@@ -228,7 +228,7 @@ int main() {
     // }
 
     // To log results, run in PlatformIO shell:
-    // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
+    // pio device monitor --port COM14 --baud 9600 --filter default --filter time --filter log2file
 
     run_inference();
 }
