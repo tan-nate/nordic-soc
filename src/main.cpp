@@ -62,6 +62,11 @@ float last_voltage = 0.0f;
 float last_current = 0.0f;
 float last_temp = 0.0f;
 
+// coulomb counting
+float cumulative_ah = 0.0f;
+const float delta_t = 1.0f / SAMPLE_FREQUENCY_HZ;  // 0.1s for 10Hz
+const float nominal_capacity_ah = 5.0f;
+
 // Read and parse incoming UART sensor data line-by-line
 void uart_fill_buffer_from_serial(BufferedSerial &uart) {
     sample_idx = 0;  // Reset buffer index
@@ -168,28 +173,33 @@ void simulate_sensors() {
 }
 
 void run_inference() {
-    printf("voltage,current,battery_temp,predicted_soc\n");
+    printf("voltage,current,battery_temp,ML_SoC,Coulomb_SoC\n");
 
     while (true) {
-        // uart_fill_buffer_from_serial(uart);
-        simulate_sensors();
+        // simulate_sensors();
+        uart_fill_buffer_from_serial(uart);
 
         signal_t signal;
         signal.total_length = EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE;
         signal.get_data = &raw_feature_get_data;
 
         EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);
-        if (res != EI_IMPULSE_OK) {
-            continue;  // Skip this iteration if inference fails
-        }
+        if (res != EI_IMPULSE_OK) continue;
 
         float predicted_soc = result.classification[0].value;
 
-        // Print timestamp + data
-        printf("%.3f,%.3f,%.3f,%.5f\n",
-               last_voltage, last_current, last_temp, predicted_soc);
+        // 🔋 Coulomb counting
+        float delta_ah = last_current * delta_t / 3600.0f;
+        cumulative_ah += delta_ah;
 
-        // ThisThread::sleep_for(1000ms);  // Delay between samples
+        float soc_coulomb = 100.0f * (1.0f + (cumulative_ah / nominal_capacity_ah));
+        if (soc_coulomb > 100.0f) soc_coulomb = 100.0f;
+        if (soc_coulomb < 0.0f) soc_coulomb = 0.0f;
+
+        // Output
+        printf("%.3f,%.3f,%.3f,%.5f,%.2f%%\n",
+               last_voltage, last_current, last_temp,
+               predicted_soc, soc_coulomb);
     }
 }
 
@@ -216,6 +226,9 @@ int main() {
     //         }
     //     }
     // }
+
+    // To log results, run in PlatformIO shell:
+    // pio device monitor --port COM8 --baud 9600 --filter default --filter time --filter log2file
 
     run_inference();
 }
