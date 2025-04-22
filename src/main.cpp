@@ -79,22 +79,25 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
                     rx_line[rx_index] = '\0';
         
                     float voltage, current, temp;
+
                     if (sscanf(rx_line, "%f,%f,%f", &voltage, &current, &temp) == 3) {
                         int offset = sample_idx * NUM_AXES;
                         raw_data_buffer[offset + 0] = (voltage - mean[0]) / (stddev[0] + 1e-6);
                         raw_data_buffer[offset + 1] = (current - mean[1]) / (stddev[1] + 1e-6);
-                        raw_data_buffer[offset + 2] = (temp    - mean[2]) / (stddev[2]  + 1e-6);
-        
-                    // 🆕 Store latest raw values
-                    if (sample_idx == 0) {
+                        raw_data_buffer[offset + 2] = (temp    - mean[2]) / (stddev[2] + 1e-6);
+                    
+                        // 🆕 Update latest values
                         last_voltage = voltage;
                         last_current = current;
                         last_temp = temp;
-                    }
-        
+                    
+                        // ✅ Coulomb counting at 10Hz (every sample)
+                        float delta_ah = current * delta_t / 3600.0f;
+                        cumulative_ah += delta_ah;
+                    
                         sample_idx++;
                     }
-        
+                    
                     rx_index = 0;
                 }
                 else if (rx_index < (int)(sizeof(rx_line) - 1)) {
@@ -173,7 +176,7 @@ void simulate_sensors() {
 }
 
 void run_inference() {
-    printf("voltage,current,battery_temp,ML_SoC,Coulomb_SoC\n");
+    printf("voltage,current,battery_temp,ML_SoC,cumulative_ah\n");
 
     while (true) {
         // simulate_sensors();
@@ -188,18 +191,10 @@ void run_inference() {
 
         float predicted_soc = result.classification[0].value;
 
-        // 🔋 Coulomb counting
-        float delta_ah = last_current * delta_t / 3600.0f;
-        cumulative_ah += delta_ah;
-
-        float soc_coulomb = 100.0f * (1.0f + (cumulative_ah / nominal_capacity_ah));
-        if (soc_coulomb > 100.0f) soc_coulomb = 100.0f;
-        if (soc_coulomb < 0.0f) soc_coulomb = 0.0f;
-
         // Output
-        printf("%.3f,%.3f,%.3f,%.5f,%.2f%%\n",
-               last_voltage, last_current, last_temp,
-               predicted_soc, soc_coulomb);
+        printf("%.3f,%.3f,%.3f,%.5f,%.6f\n",
+            last_voltage, last_current, last_temp,
+            predicted_soc, cumulative_ah);     
     }
 }
 
