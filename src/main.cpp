@@ -66,6 +66,7 @@ float last_temp = 0.0f;
 float cumulative_ah = 0.0f;
 const float delta_t = 1.0f / SAMPLE_FREQUENCY_HZ;  // 0.1s for 10Hz
 const float nominal_capacity_ah = 5.0f;
+float soc_coulomb = 100.00f;
 
 // Read and parse incoming UART sensor data line-by-line
 void uart_fill_buffer_from_serial(BufferedSerial &uart) {
@@ -94,6 +95,9 @@ void uart_fill_buffer_from_serial(BufferedSerial &uart) {
                         // ✅ Coulomb counting at 10Hz (every sample)
                         float delta_ah = current * delta_t / 3600.0f;
                         cumulative_ah += delta_ah;
+
+                        // SoC from Coulomb counting (starting at 100%)
+                        soc_coulomb = 100.0f * (1.0f + cumulative_ah / nominal_capacity_ah);
                     
                         sample_idx++;
                     }
@@ -176,7 +180,7 @@ void simulate_sensors() {
 }
 
 void run_inference() {
-    printf("voltage,current,battery_temp,ML_SoC,cumulative_ah\n");
+    printf("voltage,current,battery_temp,ML_SoC,soc_coulomb\n");
 
     while (true) {
         // simulate_sensors();
@@ -194,7 +198,7 @@ void run_inference() {
         // Output
         printf("%.3f,%.3f,%.3f,%.5f,%.6f\n",
             last_voltage, last_current, last_temp,
-            predicted_soc, cumulative_ah);     
+            predicted_soc, soc_coulomb);     
     }
 }
 
